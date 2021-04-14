@@ -4,9 +4,8 @@
 #include <chrono>
 
 class TimeScopedProfiler {
-public:
-private:
-    
+ public:
+ private:
 };
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_PROFILER_ */
