@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(CUDA REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
+include_directories(include)
 include_directories(/home/sunjiahe/libs/TensorRT-7.2.3.4/include)
 
 add_subdirectory(src)
