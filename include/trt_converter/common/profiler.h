@@ -21,6 +21,8 @@ class TimeScopedProfiler {
     std::string_view prefix_str_;
 };
 
+class CpuTimeProfiler {};
+
 }
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_PROFILER_ */
