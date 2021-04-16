@@ -1,15 +1,44 @@
 #ifndef INCLUDE_TRT_CONVERTER_CALIBRATE_CALIBRATOR_
 #define INCLUDE_TRT_CONVERTER_CALIBRATE_CALIBRATOR_
 
+#include <cstring>
+#include <string>
+#include <vector>
+
 #include "NvInfer.h"
+#include "cuda_runtime_api.h"
+#include "trt_converter/common/macro.h"
 
 namespace sss {
 
 template <typename Stream>
 class EntropyCalibratorImpl {
-  EntropyCalibratorImpl(Stream stream, int first_batch, const char* network_name, const char* input_blob_name, bool read_cache = true) {}
-  int getBatchSize() const {}
-  bool getBatch(void* bindings[], const char* names[], int nb_bindings) {}
+ public:
+  EntropyCalibratorImpl(Stream stream, int first_batch, std::string network_name, const char* input_blob_name, bool read_cache = true)
+      : stream_(std::move(stream)),
+        calibrate_string_name_("CalibrationTable" + network_name),
+        input_blob_name_(input_blob_name),
+        read_cache_(read_cache) {}
+  int getBatchSize() const { return stream_.GetBatchSize(); }
+  bool getBatch(void* bindings[], const char* names[], int nb_bindings) {
+    if (!stream_.Next()) {
+      return false;
+    }
+    CUDA_CHECK(cudaMemCpy(device_input_, stream_.GetBatch().get(), input_count_ * sizeof(float), cudaMemcpyHostToDevice));
+    assert(!strcmp(names[0], input_blob_name_));
+    bindings[0] = device_input_;
+    return true;
+  }
+  virtual ~EntropyCalibratorImpl() { CUDA_CHECK(cudaFree(device_input_)); }
+
+ private:
+  Stream stream_;
+  uint32_t input_count_ = 0;
+  std::string calibrate_string_name_;
+  std::string_view input_blob_name_;
+  bool read_cache_ = true;
+  void* device_input_ = nullptr;
+  std::vector<char> calibration_cache_;
 };
 
 template <typename Stream>
