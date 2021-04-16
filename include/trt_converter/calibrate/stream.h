@@ -12,7 +12,7 @@ namespace sss {
 
 class DataStreamBase {
  public:
-  virtual void Reset() = 0;
+  virtual void Reset(uint32_t first_batch) = 0;
   virtual bool Next() = 0;
   virtual void Skip(uint32_t count) = 0;
   virtual std::unique_ptr<float[]> GetBatch() = 0;
@@ -26,7 +26,10 @@ class ImageDataStream : public DataStreamBase {
  public:
   ImageDataStream(uint32_t batch_size, nvinfer1::Dims dims, std::vector<std::string> image_filenames)
       : batch_size_(batch_size), dims_(std::move(dims)), image_filenames_(std::move(image_filenames)) {}
-  virtual void Reset() override { current_batch = 0; }
+  virtual void Reset(uint32_t first_batch) override { 
+    current_batch = 0;
+    Skip(first_batch); 
+  }
   virtual bool Next() override {
     if (current_batch >= image_filenames_.size()) {
       return false;

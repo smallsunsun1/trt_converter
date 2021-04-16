@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "NvInfer.h"
 #include "cuda_runtime_api.h"
@@ -14,11 +15,20 @@ namespace sss {
 template <typename Stream>
 class EntropyCalibratorImpl {
  public:
-  EntropyCalibratorImpl(Stream stream, int first_batch, std::string network_name, const char* input_blob_name, bool read_cache = true)
+  EntropyCalibratorImpl(Stream stream, uint32_t first_batch, std::string network_name, const char* input_blob_name, bool read_cache = true)
       : stream_(std::move(stream)),
         calibrate_string_name_("CalibrationTable" + network_name),
         input_blob_name_(input_blob_name),
-        read_cache_(read_cache) {}
+        read_cache_(read_cache) {
+    nvinfer1::Dims dim = stream_->GetDims();
+    uint32_t res = 1;
+    for (uint32_t i = 0 ; i < dim.nbDims; ++i) {
+      res *= dim.d[i];
+    }
+    input_count_ = res;
+    CUDA_CHECK(cudaMalloc(&device_input_, input_count_));
+    stream_.Reset(first_batch);
+  }
   int getBatchSize() const { return stream_.GetBatchSize(); }
   bool getBatch(void* bindings[], const char* names[], int nb_bindings) {
     if (!stream_.Next()) {
@@ -30,6 +40,18 @@ class EntropyCalibratorImpl {
     return true;
   }
   virtual ~EntropyCalibratorImpl() { CUDA_CHECK(cudaFree(device_input_)); }
+  const void* readCalibrationCache(size_t& length) {
+    std::ifstream file_data(calibrate_string_name_, std::ios::binary);
+    if (read_cache_ && file_data.good()) {
+      std::copy(std::istreambuf_iterator<char>(file_data), std::istreambuf_iterator<char>(),  std::back_inserter(calibration_cache_));
+    }
+    length = calibration_cache_.size();
+    return length ? calibration_cache_.data() : nullptr;
+  }
+  void writeCalibrationCache(const void* cache, size_t length) {
+    std::ofstream file_data(calibrate_string_name_, std::ios::binary | std::ios::out);
+    file_data.write(reinterpret_cast<const char*>(cache), length);
+  }
 
  private:
   Stream stream_;
