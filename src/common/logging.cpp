@@ -20,9 +20,7 @@ std::optional<std::string> MessageBuffer::GetMessage() {
   }
 }
 
-void MessageConsumer::SetShouldReport(Severity severity) {
-    should_log_ = (severity_ <= severity);
-}
+void MessageConsumer::SetShouldReport(Severity severity) { should_log_ = (severity_ <= severity); }
 
 std::ostream &MessageConsumer::GetStreamBySeverity(Severity severity) {
   if (severity >= Severity::kINFO)
