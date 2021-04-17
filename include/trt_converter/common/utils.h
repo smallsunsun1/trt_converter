@@ -1,0 +1,11 @@
+#ifndef INCLUDE_TRT_CONVERTER_COMMON_UTILS_
+#define INCLUDE_TRT_CONVERTER_COMMON_UTILS_
+
+#include "NvInfer.h"
+
+namespace sss {
+
+
+};
+
+#endif /* INCLUDE_TRT_CONVERTER_COMMON_UTILS_ */

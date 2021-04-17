@@ -38,6 +38,7 @@ class Logger : public nvinfer1::ILogger {
   virtual void log(Severity severity, const char* msg) TRTC_NOEXCEPT override;
 
  private:
+  MessageBuffer buffer_;
 };
 
 }  // namespace sss

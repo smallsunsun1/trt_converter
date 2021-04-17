@@ -21,7 +21,9 @@ class TimeScopedProfiler {
   std::string_view prefix_str_;
 };
 
-class CpuTimeProfiler {};
+class BaseProfiler {};
+
+class CpuTimeProfiler: public BaseProfiler {};
 
 }  // namespace sss
 

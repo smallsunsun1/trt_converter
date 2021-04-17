@@ -23,6 +23,7 @@ link_libraries(${CUDA_LIBRARIES} Threads::Threads)
 
 enable_testing()
 
+add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tests)
 
