@@ -35,7 +35,7 @@ class EntropyCalibratorImpl {
       return false;
     }
     CUDA_CHECK(cudaMemCpy(device_input_, stream_.GetBatch().get(), input_count_ * sizeof(float), cudaMemcpyHostToDevice));
-    assert(!strcmp(names[0], input_blob_name_));
+    assert(!strcmp(names[0], input_blob_name_.data()));
     bindings[0] = device_input_;
     return true;
   }
