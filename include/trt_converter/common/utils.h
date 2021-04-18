@@ -3,9 +3,6 @@
 
 #include "NvInfer.h"
 
-namespace sss {
-
-
-};
+namespace sss {};
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_UTILS_ */

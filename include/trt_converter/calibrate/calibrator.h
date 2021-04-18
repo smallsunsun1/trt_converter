@@ -2,9 +2,9 @@
 #define INCLUDE_TRT_CONVERTER_CALIBRATE_CALIBRATOR_
 
 #include <cstring>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
 
 #include "NvInfer.h"
 #include "cuda_runtime_api.h"
@@ -22,7 +22,7 @@ class EntropyCalibratorImpl {
         read_cache_(read_cache) {
     nvinfer1::Dims dim = stream_->GetDims();
     uint32_t res = 1;
-    for (uint32_t i = 0 ; i < dim.nbDims; ++i) {
+    for (uint32_t i = 0; i < dim.nbDims; ++i) {
       res *= dim.d[i];
     }
     input_count_ = res;
@@ -43,7 +43,7 @@ class EntropyCalibratorImpl {
   const void* readCalibrationCache(size_t& length) {
     std::ifstream file_data(calibrate_string_name_, std::ios::binary);
     if (read_cache_ && file_data.good()) {
-      std::copy(std::istreambuf_iterator<char>(file_data), std::istreambuf_iterator<char>(),  std::back_inserter(calibration_cache_));
+      std::copy(std::istreambuf_iterator<char>(file_data), std::istreambuf_iterator<char>(), std::back_inserter(calibration_cache_));
     }
     length = calibration_cache_.size();
     return length ? calibration_cache_.data() : nullptr;

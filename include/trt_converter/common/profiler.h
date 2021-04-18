@@ -23,7 +23,7 @@ class TimeScopedProfiler {
 
 class BaseProfiler {};
 
-class CpuTimeProfiler: public BaseProfiler {};
+class CpuTimeProfiler : public BaseProfiler {};
 
 }  // namespace sss
 
