@@ -1,0 +1,3 @@
+add_executable(cuda_graph_exec_test cuda_graph_exec_test.cu)
+target_link_libraries(cuda_graph_exec_test PRIVATE common)
+add_test(NAME test_cuda_graph_exec COMMAND cuda_graph_exec_test 100)

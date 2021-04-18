@@ -1,3 +1,6 @@
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
 project(trt_conveter)
 cmake_minimum_required(VERSION 3.15)
 
@@ -6,6 +9,8 @@ set(CMAKE_CUDA_HOST_COMPILER /usr/bin/gcc-9)
 enable_language(CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61;-std=c++17;)
 set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always -fno-rtti -Wall -Wextra -Wno-deprecated-copy -Wno-deprecated-declarations")
 
 find_package(Threads REQUIRED)
