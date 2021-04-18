@@ -17,13 +17,16 @@ inline void CudaStatusCheck(cudaError_t status) {
 }
 
 #if CUDA_VERSION < 10000
-inline void CudaSleep(cudaStream_t stream, cudaError_t status, void* sleep)
-#else
-inline void CudaSleep(void* sleep)
-#endif
-{
+inline void CudaSleep(cudaStream_t stream, cudaError_t status, void* sleep) {
+  (void)stream;
+  (void)status;
   std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
 }
+#else
+inline void CudaSleep(void* sleep) {
+  std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
+}
+#endif
 
 class TRTCudaEvent;
 
