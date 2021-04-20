@@ -23,9 +23,7 @@ inline void CudaSleep(cudaStream_t stream, cudaError_t status, void* sleep) {
   std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
 }
 #else
-inline void CudaSleep(void* sleep) {
-  std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
-}
+inline void CudaSleep(void* sleep) { std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep))); }
 #endif
 
 class TRTCudaEvent;
