@@ -153,6 +153,14 @@ class Bindings {
   std::vector<void*> device_pointers_;
 };
 
+template <typename T>
+struct TRTObjDeleter {
+  void operator()(T* obj) { obj->destroy(); }
+};
+
+template <typename T>
+using TRTUniquePtr = std::unique_ptr<T, TRTObjDeleter<T>>;
+
 };  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_UTILS_ */
