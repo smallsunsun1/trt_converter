@@ -7,3 +7,8 @@ add_executable(data_read_unittest data_read_unittest.cpp)
 target_link_libraries(data_read_unittest PUBLIC ${GTEST_LIBRARIES})
 target_include_directories(data_read_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
 add_test(NAME test_data_read COMMAND data_read_unittest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(str_function_unittest str_function_unittest.cpp)
+target_link_libraries(str_function_unittest PUBLIC ${GTEST_LIBRARIES})
+target_include_directories(str_function_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
+add_test(NAME test_str_function COMMAND str_function_unittest)

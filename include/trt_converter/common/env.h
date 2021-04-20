@@ -9,8 +9,6 @@
 #include "utils.h"
 namespace sss {
 
-
-
 struct TRTInferenceEnvironment {
   TRTUniquePtr<nvinfer1::ICudaEngine> engine;
   std::unique_ptr<BaseProfiler> profiler;
