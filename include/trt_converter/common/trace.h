@@ -3,10 +3,8 @@
 
 namespace sss {
 
-class InferenceTrace {
-    
-};
+class InferenceTrace {};
 
-}
+}  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_TRACE_ */

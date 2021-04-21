@@ -31,6 +31,10 @@ inline constexpr float kDefaultPercentile = 99;
 
 using Arguments = std::unordered_map<std::string, std::string>;
 
+using IOFormat = std::pair<nvinfer1::DataType, nvinfer1::TensorFormats>;
+
+using ShapeRange = std::array<std::vector<int>, nvinfer1::EnumMax<nvinfer1::OptProfileSelector>()>;
+
 enum class ModelFormat { kAny = 0, kUff = 1, kCaffe = 2, kONNX = 3 };
 
 struct Options {
@@ -55,7 +59,27 @@ struct ModelOptions : public Options {
 
 struct BuildOptions : public Options {};
 
-struct InferenceOptions : public Options {};
+struct InferenceOptions : public Options {
+  int batch = kDefaultBatch;
+  int iterations = kDefaultIterations;
+  int warmup = kDefaultWarmUp;
+  int duration = kDefaultDuration;
+  int sleep = kDefaultSleep;
+  int streams = kDefaultStreams;
+  bool overlap = true;
+  bool skipTransfers = false;
+  bool spin = false;
+  bool threads = false;
+  bool graph = false;
+  bool skip = false;
+  bool rerun = false;
+  std::unordered_map<std::string, std::string> inputs;
+  std::unordered_map<std::string, std::vector<int>> shapes;
+
+  void Parse(Arguments& arguments) override;
+
+  static void Help(std::ostream& out);
+};
 
 struct SystemOptions : public Options {};
 

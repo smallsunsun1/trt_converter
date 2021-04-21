@@ -23,22 +23,21 @@ int StringToValue<int>(const std::string& option) {
 }
 template <>
 float StringToValue<float>(const std::string& option) {
-    return std::stof(option);
+  return std::stof(option);
 }
 template <>
 bool StringToValue<bool>(const std::string&) {
-    return true;
+  return true;
 }
 
 template <>
 std::vector<int> StringToValue<std::vector<int>>(const std::string& option) {
-    std::vector<int> shape;
-    std::vector<std::string> dims_string = SplitToStringVec(option, "x");
-    for (const auto& d: dims_string) {
-        shape.push_back(StringToValue<int>(d));
-    }
-    return shape;
+  std::vector<int> shape;
+  std::vector<std::string> dims_string = SplitToStringVec(option, "x");
+  for (const auto& d : dims_string) {
+    shape.push_back(StringToValue<int>(d));
+  }
+  return shape;
 }
-
 
 }  // namespace sss
