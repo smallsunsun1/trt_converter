@@ -7,6 +7,7 @@
 #include "NvInfer.h"
 #include "profiler.h"
 #include "utils.h"
+#include "options.h"
 namespace sss {
 
 struct TRTInferenceEnvironment {
@@ -15,6 +16,10 @@ struct TRTInferenceEnvironment {
   std::vector<TRTUniquePtr<nvinfer1::IExecutionContext>> contexts;
   std::vector<std::unique_ptr<Bindings>> bindings_;
 };
+
+
+bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& options);
+void RunInference(const InferenceOptions& options, TRTInferenceEnvironment& iEnv, int device);
 
 }  // namespace sss
 
