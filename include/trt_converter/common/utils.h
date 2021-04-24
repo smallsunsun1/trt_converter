@@ -34,6 +34,42 @@ inline int DataTypeSize(nvinfer1::DataType data_type) {
 }
 
 template <typename T>
+inline T RoundUp(T m, T n) {
+  return ((m + n - 1) / n) * n;
+}
+
+template <typename A, typename B>
+inline A DivUp(A x, B n) {
+  return (x + n - 1) / n;
+}
+
+inline int Volume(const nvinfer1::Dims& d) { return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>()); }
+
+inline int Volume(const nvinfer1::Dims& dims, const nvinfer1::Dims& strides, int vec_dim, int comps, int batch) {
+  int maxNbElems = 1;
+  for (int i = 0; i < dims.nbDims; ++i) {
+    // Get effective length of axis.
+    int d = dims.d[i];
+    // Any dimension is 0, it is an empty tensor.
+    if (d == 0) {
+      return 0;
+    }
+    if (i == vec_dim) {
+      d = DivUp(d, comps);
+    }
+    maxNbElems = std::max(maxNbElems, d * strides.d[i]);
+  }
+  return maxNbElems * batch * (vec_dim < 0 ? 1 : comps);
+}
+
+inline int Volume(nvinfer1::Dims dims, int vec_dim, int comps, int batch) {
+  if (vec_dim != -1) {
+    dims.d[vec_dim] = RoundUp(dims.d[vec_dim], comps);
+  }
+  return Volume(dims) * std::max(batch, 1);
+}
+
+template <typename T>
 inline void FillBuffer(void* buffer, int volume, T min, T max) {
   T* type_buffer = reinterpret_cast<T*>(buffer);
   std::default_random_engine engine;
