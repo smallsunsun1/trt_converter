@@ -1,0 +1,16 @@
+syntax="proto3";
+option cc_enable_arenas = true;
+package sss;
+
+message Request {
+    string type = 1;
+}
+
+message Response {
+    string type = 1;
+}
+
+service RpcWork {
+    rpc RemoteCall(Request) returns (Response) {}
+    rpc RemoteStreamCall(stream Request) returns (stream Response) {}
+}
