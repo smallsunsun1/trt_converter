@@ -67,26 +67,22 @@ bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& option
   }
   for (uint32_t b = 0; b < end_binding_index; ++b) {
     const auto dims = env.contexts.front()->getBindingDimensions(b);
-        const auto vecDim = env.engine->getBindingVectorizedDim(b);
-        const auto comps = env.engine->getBindingComponentsPerElement(b);
-        const auto dataType = env.engine->getBindingDataType(b);
-        const auto strides = env.contexts.front()->getStrides(b);
-        const int batch = env.engine->hasImplicitBatchDimension() ? options.batch : 1;
-        const auto vol = Volume(dims, strides, vecDim, comps, batch);
-        const auto name = env.engine->getBindingName(b);
-        const auto isInput = env.engine->bindingIsInput(b);
-        for (auto& bindings : env.bindings_)
-        {
-            const auto input = options.inputs.find(name);
-            if (isInput && input != options.inputs.end())
-            {
-                bindings->AddBinding(b, name, isInput, vol, dataType, input->second);
-            }
-            else
-            {
-                bindings->AddBinding(b, name, isInput, vol, dataType);
-            }
-        }
+    const auto vecDim = env.engine->getBindingVectorizedDim(b);
+    const auto comps = env.engine->getBindingComponentsPerElement(b);
+    const auto dataType = env.engine->getBindingDataType(b);
+    const auto strides = env.contexts.front()->getStrides(b);
+    const int batch = env.engine->hasImplicitBatchDimension() ? options.batch : 1;
+    const auto vol = Volume(dims, strides, vecDim, comps, batch);
+    const auto name = env.engine->getBindingName(b);
+    const auto isInput = env.engine->bindingIsInput(b);
+    for (auto& bindings : env.bindings_) {
+      const auto input = options.inputs.find(name);
+      if (isInput && input != options.inputs.end()) {
+        bindings->AddBinding(b, name, isInput, vol, dataType, input->second);
+      } else {
+        bindings->AddBinding(b, name, isInput, vol, dataType);
+      }
+    }
   }
   return true;
 }

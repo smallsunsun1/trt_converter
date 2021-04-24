@@ -3,3 +3,6 @@ find include -name "*.cpp" | xargs -i -P20 clang-format -i {}
 
 find src -name "*.h" | xargs -i -P20 clang-format -i {}
 find src -name "*.cpp" | xargs -i -P20 clang-format -i {}
+
+find tools -name "*.h" | xargs -i -P20 clang-format -i {}
+find tools -name "*.cpp" | xargs -i -P20 clang-format -i {}
