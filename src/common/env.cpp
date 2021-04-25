@@ -1,5 +1,7 @@
 #include "trt_converter/common/env.h"
 
+#include <mutex>
+
 namespace sss {
 
 nvinfer1::Dims ToDims(const std::vector<int>& shape) {
@@ -86,5 +88,30 @@ bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& option
   }
   return true;
 }
+
+namespace {
+
+using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
+//!
+//! \struct SyncStruct
+//! \brief Threads synchronization structure
+//!
+struct SyncStruct {
+  std::mutex mutex;
+  TRTCudaStream mainStream;
+  TRTCudaEvent gpuStart;
+  TimePoint cpuStart{};
+  int sleep{0};
+};
+
+struct Enqueue {
+  explicit Enqueue(nvinfer1::IExecutionContext& context, void** buffers) : mContext(context), mBuffers(buffers) {}
+
+  nvinfer1::IExecutionContext& mContext;
+  void** mBuffers{};
+};
+
+}  // namespace
 
 }  // namespace sss

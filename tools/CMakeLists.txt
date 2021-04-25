@@ -1,6 +1,6 @@
 find_package(protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
-set(grpc_path /usr/local/bin/)
+set(grpc_path /usr/local/bin/ CACHE STRING /usr/local/bin/)
 find_program(protoc_bin protoc ${grpc_path})
 find_program(grpc_plugin grpc_cpp_plugin ${grpc_path})
 find_program(grpc_python_plugin grpc_python_plugin ${grpc_path})
