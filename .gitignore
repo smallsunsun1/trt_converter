@@ -3,3 +3,5 @@ third_party/async_lib
 third_party/grpc
 third_party/glog
 **/*.pb.*
+tools/proto/*_pb2*.py
+**/__pycache__

@@ -76,7 +76,12 @@ class SimpleServer {
 class SimpleStreamServer {
  public:
   SimpleStreamServer(async::HostContext* context) : run_context_(context) {}
-  ~SimpleStreamServer() {}
+  ~SimpleStreamServer() {
+      server_->Shutdown();
+      for (size_t i = 0; i < server_queues_.size(); ++i) {
+          server_queues_[i]->Shutdown();
+      }
+  }
   void Run(const std::string& server_address, uint32_t num_threads = std::thread::hardware_concurrency() * 2) {
     grpc::ServerBuilder builder;
     service_ = std::make_unique<RpcWork::AsyncService>();

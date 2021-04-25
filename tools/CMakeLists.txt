@@ -1,9 +1,14 @@
 find_package(protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
-find_program(protoc_bin protoc /usr/local/bin/)
-find_program(grpc_plugin grpc_cpp_plugin /usr/local/bin/)
+set(grpc_path /usr/local/bin/)
+find_program(protoc_bin protoc ${grpc_path})
+find_program(grpc_plugin grpc_cpp_plugin ${grpc_path})
+find_program(grpc_python_plugin grpc_python_plugin ${grpc_path})
 
-exec_program(${protoc_bin} ${CMAKE_CURRENT_SOURCE_DIR}/proto ARGS "message.proto -I./ --plugin=protoc-gen-grpc=${grpc_plugin} --cpp_out=./ --grpc_out=./")
+exec_program(${protoc_bin} ${CMAKE_CURRENT_SOURCE_DIR}/proto 
+            ARGS "message.proto -I./ --plugin=protoc-gen-grpc=${grpc_plugin} --cpp_out=./ --grpc_out=./")
+exec_program(${protoc_bin} ${CMAKE_CURRENT_SOURCE_DIR}/proto
+            ARGS "message.proto -I./ --plugin=protoc-gen-grpc=${grpc_python_plugin} --python_out=./ --grpc_out=./")           
 
 add_subdirectory(proto)
 
