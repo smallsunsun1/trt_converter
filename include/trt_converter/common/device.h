@@ -157,8 +157,12 @@ class MirroredBuffer {
     device_buffer_.Allocate(size);
     device_buffer_.Allocate(size);
   }
-  void DeviceToHost() { CudaStatusCheck(cudaMemcpy(host_buffer_.Get(), device_buffer_.Get(), size_, cudaMemcpyDeviceToHost)); }
-  void HostToDevice() { CudaStatusCheck(cudaMemcpy(device_buffer_.Get(), host_buffer_.Get(), size_, cudaMemcpyHostToDevice)); }
+  void DeviceToHost(TRTCudaStream& stream) {
+    CudaStatusCheck(cudaMemcpyAsync(host_buffer_.Get(), device_buffer_.Get(), size_, cudaMemcpyDeviceToHost, stream.Get()));
+  }
+  void HostToDevice(TRTCudaStream& stream) {
+    CudaStatusCheck(cudaMemcpyAsync(device_buffer_.Get(), host_buffer_.Get(), size_, cudaMemcpyHostToDevice, stream.Get()));
+  }
   void* GetDeviceBuffer() const { return device_buffer_.Get(); }
   void* GetHostBuffer() const { return host_buffer_.Get(); }
 

@@ -2,19 +2,21 @@
 
 #include <mutex>
 
+#include "NvUtils.h"
+
 namespace sss {
 
 nvinfer1::Dims ToDims(const std::vector<int>& shape) {
   nvinfer1::Dims dims;
   dims.nbDims = shape.size();
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     dims.d[i] = shape[i];
   }
   return dims;
 }
 
 bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& options) {
-  for (uint32_t i = 0; i < options.streams; ++i) {
+  for (int i = 0; i < options.streams; ++i) {
     env.contexts.emplace_back(env.engine->createExecutionContext());
     env.bindings_.emplace_back(new Bindings);
   }
@@ -106,10 +108,77 @@ struct SyncStruct {
 };
 
 struct Enqueue {
-  explicit Enqueue(nvinfer1::IExecutionContext& context, void** buffers) : mContext(context), mBuffers(buffers) {}
+  explicit Enqueue(nvinfer1::IExecutionContext& context, void** buffers) : context(context), buffers(buffers) {}
+  nvinfer1::IExecutionContext& context;
+  void** buffers{};
+};
 
-  nvinfer1::IExecutionContext& mContext;
-  void** mBuffers{};
+class EnqueueImplicit : Enqueue {
+ public:
+  EnqueueImplicit(nvinfer1::IExecutionContext& context, void** buffers, uint32_t batch) : Enqueue(context, buffers), batch(batch) {}
+  void operator()(TRTCudaStream& stream) const { context.enqueue(batch, buffers, stream.Get(), nullptr); }
+
+ private:
+  uint32_t batch;
+};
+
+class EnqueueExplicit : Enqueue {
+ public:
+  EnqueueExplicit(nvinfer1::IExecutionContext& context, void** buffers) : Enqueue(context, buffers) {}
+  void operator()(TRTCudaStream& stream) const { context.enqueueV2(buffers, stream.Get(), nullptr); }
+};
+
+class EnqueueGraph {
+ public:
+  explicit EnqueueGraph(TRTCudaGraph& graph) : graph(graph) {}
+  void operator()(TRTCudaStream& stream) const { graph.Launch(stream); }
+  TRTCudaGraph& graph;
+};
+
+using EnqueueFunction = std::function<void(TRTCudaStream&)>;
+
+enum class StreamType : int { kINPUT = 0, kCOMPUTE = 1, kOUTPUT = 2, kNUM = 3 };
+
+enum class EventType : int { kINPUT_S = 0, kINPUT_E = 1, kCOMPUTE_S = 2, kCOMPUTE_E = 3, kOUTPUT_S = 4, kOUTPUT_E = 5, kNUM = 6 };
+using MultiStream = std::array<TRTCudaStream, static_cast<int>(StreamType::kNUM)>;
+
+using MultiEvent = std::array<std::unique_ptr<TRTCudaEvent>, static_cast<int>(EventType::kNUM)>;
+
+using EnqueueTimes = std::array<TimePoint, 2>;
+
+class Iterator {
+ public:
+ private:
+  TRTCudaStream& getStream(StreamType t) { return stream_[static_cast<int>(t)]; }
+
+  void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context, Bindings& bindings) {
+    if (inference.batch) {
+      enqueue_ = EnqueueFunction(EnqueueImplicit(context, bindings_.GetDeviceBuffers(), inference.batch));
+    } else {
+      enqueue_ = EnqueueFunction(EnqueueExplicit(context, bindings_.GetDeviceBuffers()));
+      ;
+    }
+    if (inference.graph) {
+      TRTCudaStream& stream = getStream(StreamType::kCOMPUTE);
+      enqueue_(stream);
+      stream.Synchronize();
+      graph_.BeginCapture(stream);
+      enqueue_(stream);
+      graph_.EndCapture(stream);
+      enqueue_ = EnqueueFunction(EnqueueGraph(graph_));
+    }
+  }
+  Bindings& bindings_;
+  TRTCudaGraph graph_;
+  EnqueueFunction enqueue_;
+  uint32_t stream_id_ = 0;
+  uint32_t next_ = 0;
+  uint32_t depth_ = 0;
+  std::vector<bool> active_;
+  MultiStream stream_;
+  std::vector<MultiEvent> events_;
+  int enqueue_start_{0};
+  std::vector<EnqueueTimes> enqueue_times_;
 };
 
 }  // namespace

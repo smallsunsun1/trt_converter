@@ -11,6 +11,7 @@
 
 #include "NvInfer.h"
 #include "device.h"
+#include "common.h"
 #if CUDA_VERSION < 10000
 #include <half.h>
 #else
@@ -143,7 +144,7 @@ struct Binding {
       }
     }
   }
-  void Dump(std::ostream& os, const std::string separator = " ") {
+  void Dump(std::ostream& os, const std::string separator = " ") const {
     switch (data_type) {
       case nvinfer1::DataType::kBOOL: {
         DumpBuffer<bool>(buffer.GetHostBuffer(), volume, separator, os);
@@ -181,6 +182,87 @@ class Bindings {
     names_[name] = b;
     bindings_[b].is_input = is_input;
     bindings_[b].buffer.Allocate(static_cast<size_t>(volume) * static_cast<size_t>(DataTypeSize(data_type)));
+  }
+  void** GetDeviceBuffers() { return device_pointers_.data(); }
+
+  void TransferInputToDevice(TRTCudaStream& stream) {
+    for (auto& b : names_) {
+      if (bindings_[b.second].is_input) {
+        bindings_[b.second].buffer.HostToDevice(stream);
+      }
+    }
+  }
+
+  void TransferOutputToHost(TRTCudaStream& stream) {
+    for (auto& b : names_) {
+      if (!bindings_[b.second].is_input) {
+        bindings_[b.second].buffer.DeviceToHost(stream);
+      }
+    }
+  }
+
+  void Fill(int binding, const std::string& file_name) { bindings_[binding].Fill(file_name); }
+
+  void Fill(int binding) { bindings_[binding].Fill(); }
+
+  void DumpBindingDimensions(int binding, const nvinfer1::IExecutionContext& context, std::ostream& os) const {
+    const auto dims = context.getBindingDimensions(binding);
+    // Do not add a newline terminator, because the caller may be outputting a JSON string.
+    os << dims;
+  }
+
+  void DumpBindingValues(int binding, std::ostream& os, const std::string& separator = " ") const { bindings_[binding].Dump(os, separator); }
+  void DumpInputs(const nvinfer1::IExecutionContext& context, std::ostream& os) const {
+    auto is_input = [](const Binding& b) { return b.is_input; };
+    DumpBindings(context, is_input, os);
+  }
+
+  void DumpOutputs(const nvinfer1::IExecutionContext& context, std::ostream& os) const {
+    auto isOutput = [](const Binding& b) { return !b.is_input; };
+    DumpBindings(context, isOutput, os);
+  }
+
+  void DumpBindings(const nvinfer1::IExecutionContext& context, std::ostream& os) const {
+    auto all = [](const Binding& b) { return true; };
+    DumpBindings(context, all, os);
+  }
+
+  void DumpBindings(const nvinfer1::IExecutionContext& context, bool (*predicate)(const Binding& b), std::ostream& os) const {
+    for (const auto& n : names_) {
+      const auto binding = n.second;
+      if (predicate(bindings_[binding])) {
+        os << n.first << ": (";
+        DumpBindingDimensions(binding, context, os);
+        os << ")" << std::endl;
+        DumpBindingValues(binding, os);
+        os << std::endl;
+      }
+    }
+  }
+
+  std::unordered_map<std::string, int> GetInputBindings() const {
+    auto is_input = [](const Binding& b) { return b.is_input; };
+    return GetBindings(is_input);
+  }
+
+  std::unordered_map<std::string, int> GetOutputBindings() const {
+    auto is_output = [](const Binding& b) { return !b.is_input; };
+    return GetBindings(is_output);
+  }
+
+  std::unordered_map<std::string, int> GetBindings() const {
+    auto all = [](const Binding& b) { return true; };
+    return GetBindings(all);
+  }
+  std::unordered_map<std::string, int> GetBindings(bool (*predicate)(const Binding& b)) const {
+    std::unordered_map<std::string, int> bindings;
+    for (const auto& n : names_) {
+      const auto binding = n.second;
+      if (predicate(bindings_[binding])) {
+        bindings.insert(n);
+      }
+    }
+    return bindings;
   }
 
  private:
