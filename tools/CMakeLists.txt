@@ -18,3 +18,7 @@ target_link_libraries(client PRIVATE proto gRPC::grpc++ protobuf::libprotobuf)
 add_executable(server server.cpp)
 target_include_directories(server PUBLIC ${CMAKE_SOURCE_DIR}/third_party/async_lib)
 target_link_libraries(server PRIVATE proto gRPC::grpc++ protobuf::libprotobuf async_context)
+
+add_executable(rpc_stream_server rpc_stream_server.cpp)
+target_include_directories(rpc_stream_server PUBLIC ${CMAKE_SOURCE_DIR}/third_party/async_lib)
+target_link_libraries(rpc_stream_server PRIVATE proto gRPC::grpc++ protobuf::libprotobuf async_context)

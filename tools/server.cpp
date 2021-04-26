@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -93,7 +94,7 @@ class SimpleStreamServer {
     threads_.resize(num_threads);
     server_queues_.resize(num_threads);
     shutdown_state_.resize(num_threads);
-    compute_func_ = [this](Request* req, Response* res) -> grpc::Status { return grpc::Status::OK; };
+    compute_func_ = [this](Request* req, Response* res) -> grpc::Status { return DoRunFunc(req, res); };
   }
   ~SimpleStreamServer() {
     for (auto& state : shutdown_state_) {
@@ -133,23 +134,21 @@ class SimpleStreamServer {
     constexpr uint32_t kNumCalls = 1000;
     for (uint32_t connection_num = 0; connection_num < kNumCalls; ++connection_num) {
       for (size_t i = 0; i < server_queues_.size(); ++i) {
-        async_call_impl_queue_.emplace_back(new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
+        // async_call_impl_queue_.emplace_back(new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
       }
     }
     for (size_t i = 0; i < threads_.size(); ++i) {
       shutdown_state_[i] = std::make_unique<PerThreadShutDownState>();
-      threads_[i] = std::make_unique<std::thread>([this, i]() {HandleRpcs(i);});
+      threads_[i] = std::make_unique<std::thread>([this, i]() { HandleRpcs(i); });
     }
   }
   void HandleRpcs(size_t idx) {
     void* tag;
     bool ok;
     std::cout << "Start To Get Tag From Queue!";
-    if (!server_queues_[idx]->Next(&tag, &ok)) {return;}
-    // gpr_timespec time;
-    // time.tv_sec = 5;
-    // time.tv_nsec = 0;
-    // time.clock_type = GPR_TIMESPAN;
+    if (!server_queues_[idx]->Next(&tag, &ok)) {
+      return;
+    }
     RpcServerContext* ctx;
     std::mutex* mutex_ptr = &shutdown_state_[idx]->mu;
     do {
@@ -159,14 +158,16 @@ class SimpleStreamServer {
         mutex_ptr->unlock();
         return;
       }
-    } while (server_queues_[idx]->DoThenAsyncNext([&, ctx, ok, mutex_ptr](){
-      ctx->Lock();
-      if (!ctx->RunNextStep(ok)) {
-        ctx->Reset();
-      }
-      ctx->UnLock();
-      mutex_ptr->unlock();
-    }, &tag, &ok, gpr_inf_future(GPR_CLOCK_REALTIME)));
+    } while (server_queues_[idx]->DoThenAsyncNext(
+        [&, ctx, ok, mutex_ptr]() {
+          ctx->Lock();
+          if (!ctx->RunNextStep(ok)) {
+            ctx->Reset();
+          }
+          ctx->UnLock();
+          mutex_ptr->unlock();
+        },
+        &tag, &ok, gpr_inf_future(GPR_CLOCK_REALTIME)));
   }
 
  private:
@@ -174,62 +175,66 @@ class SimpleStreamServer {
    public:
     AsyncCallDataImpl(RpcWork::AsyncService* service, grpc::ServerCompletionQueue* queue, async::HostContext* job_context,
                       std::function<grpc::Status(Request*, Response*)> invoke_func)
-        : server_context(new grpc::ServerContext),
-          complete_queue(queue),
-          service(service),
-          job_context(job_context),
-          next_state(&AsyncCallDataImpl::RequestDone),
-          invoke_method(invoke_func),
-          stream(std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context.get())) {}
+        : server_context_(new grpc::ServerContext),
+          complete_queue_(queue),
+          service_(service),
+          job_context_(job_context),
+          next_state_(&AsyncCallDataImpl::RequestDone),
+          invoke_method_(invoke_func) {
+      req = std::make_unique<Request>();
+      res = std::make_unique<Response>();
+      stream_ = std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context_.get());
+      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_, reinterpret_cast<void*>(this));
+    }
     ~AsyncCallDataImpl() {}
-    bool RunNextStep(bool ok) override { return (this->*next_state)(ok); }
+    bool RunNextStep(bool ok) override { return (this->*next_state_)(ok); }
     void Reset() override {
-      server_context.reset(new grpc::ServerContext);
+      server_context_.reset(new grpc::ServerContext);
       req.reset(new Request);
       res.reset(new Response);
-      stream = std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context.get());
-      next_state = &AsyncCallDataImpl::RequestDone;
-      service->RequestRemoteStreamCall(server_context.get(), stream.get(), complete_queue, complete_queue, reinterpret_cast<void*>(this));
+      stream_ = std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context_.get());
+      next_state_ = &AsyncCallDataImpl::RequestDone;
+      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_, reinterpret_cast<void*>(this));
     }
 
    private:
     bool RequestDone(bool ok) {
       if (!ok) return false;
-      next_state = &AsyncCallDataImpl::ReadDone;
-      stream->Read(req.get(), reinterpret_cast<void*>(this));
+      next_state_ = &AsyncCallDataImpl::ReadDone;
+      stream_->Read(req.get(), reinterpret_cast<void*>(this));
       return true;
     }
     bool ReadDone(bool ok) {
       if (ok) {
-        grpc::Status status = invoke_method(req.get(), res.get());
-        next_state = &AsyncCallDataImpl::WriteDone;
-        stream->Write(*res, reinterpret_cast<void*>(this));
+        grpc::Status status = invoke_method_(req.get(), res.get());
+        next_state_ = &AsyncCallDataImpl::WriteDone;
+        stream_->Write(*res, reinterpret_cast<void*>(this));
       } else {
-        next_state = &AsyncCallDataImpl::FinishDone;
-        stream->Finish(grpc::Status::OK, reinterpret_cast<void*>(this));
+        next_state_ = &AsyncCallDataImpl::FinishDone;
+        stream_->Finish(grpc::Status::OK, reinterpret_cast<void*>(this));
       }
       return false;
     }
     bool WriteDone(bool ok) {
       if (ok) {
-        next_state = &AsyncCallDataImpl::ReadDone;
-        stream->Read(req.get(), reinterpret_cast<void*>(this));
+        next_state_ = &AsyncCallDataImpl::ReadDone;
+        stream_->Read(req.get(), reinterpret_cast<void*>(this));
       } else {
-        next_state = &AsyncCallDataImpl::FinishDone;
-        stream->Finish(grpc::Status::OK, reinterpret_cast<void*>(this));
+        next_state_ = &AsyncCallDataImpl::FinishDone;
+        stream_->Finish(grpc::Status::OK, reinterpret_cast<void*>(this));
       }
       return true;
     }
     bool FinishDone(bool) { return false; }
-    std::unique_ptr<grpc::ServerContext> server_context;
-    grpc::ServerCompletionQueue* complete_queue;
-    RpcWork::AsyncService* service;
-    async::HostContext* job_context;
+    std::unique_ptr<grpc::ServerContext> server_context_;
+    grpc::ServerCompletionQueue* complete_queue_;
+    RpcWork::AsyncService* service_;
+    async::HostContext* job_context_;
     std::unique_ptr<Request> req;
     std::unique_ptr<Response> res;
-    bool (AsyncCallDataImpl::*next_state)(bool);
-    std::function<grpc::Status(Request*, Response*)> invoke_method;
-    std::unique_ptr<grpc::ServerAsyncReaderWriter<Response, Request>> stream;
+    bool (AsyncCallDataImpl::*next_state_)(bool);
+    std::function<grpc::Status(Request*, Response*)> invoke_method_;
+    std::unique_ptr<grpc::ServerAsyncReaderWriter<Response, Request>> stream_;
   };
   struct PerThreadShutDownState {
     PerThreadShutDownState() : shut_down(false) {}
@@ -249,7 +254,14 @@ class SimpleStreamServer {
 }  // namespace sss
 
 int main(int argc, char* argv[]) {
-  sss::SimpleServer server;
+  // sss::SimpleServer server;
+  // server.Run("localhost:50051");
+
+  std::unique_ptr<sss::async::HostContext> context = sss::async::CreateCustomHostContext(4, 8);
+  sss::SimpleStreamServer server(context.get(), 4);
   server.Run("localhost:50051");
+  while (true) {
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+  }
   return 0;
 }
