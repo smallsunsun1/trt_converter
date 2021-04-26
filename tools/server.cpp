@@ -128,19 +128,20 @@ class SimpleStreamServer {
     for (size_t i = 0; i < server_queues_.size(); ++i) {
       server_queues_[i] = builder.AddCompletionQueue();
     }
-    builder.BuildAndStart();
+    server_ = builder.BuildAndStart();
     std::cout << "Server Listen On " << server_address << std::endl;
     //  AsyncCallDataImpl size is qeual to kNumCalls * num_server_queues
     constexpr uint32_t kNumCalls = 1000;
     for (uint32_t connection_num = 0; connection_num < kNumCalls; ++connection_num) {
       for (size_t i = 0; i < server_queues_.size(); ++i) {
-        // async_call_impl_queue_.emplace_back(new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
+        async_call_impl_queue_.emplace_back(new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
       }
     }
     for (size_t i = 0; i < threads_.size(); ++i) {
       shutdown_state_[i] = std::make_unique<PerThreadShutDownState>();
       threads_[i] = std::make_unique<std::thread>([this, i]() { HandleRpcs(i); });
     }
+    server_->Wait();
   }
   void HandleRpcs(size_t idx) {
     void* tag;
@@ -213,7 +214,7 @@ class SimpleStreamServer {
         next_state_ = &AsyncCallDataImpl::FinishDone;
         stream_->Finish(grpc::Status::OK, reinterpret_cast<void*>(this));
       }
-      return false;
+      return true;
     }
     bool WriteDone(bool ok) {
       if (ok) {
@@ -260,8 +261,5 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<sss::async::HostContext> context = sss::async::CreateCustomHostContext(4, 8);
   sss::SimpleStreamServer server(context.get(), 4);
   server.Run("localhost:50051");
-  while (true) {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-  }
   return 0;
 }
