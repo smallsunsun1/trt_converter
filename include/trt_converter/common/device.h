@@ -54,7 +54,7 @@ class TRTCudaEvent {
   TRTCudaEvent& operator=(TRTCudaEvent&&) = delete;
   ~TRTCudaEvent() { CudaStatusCheck(cudaEventDestroy(event_)); }
   cudaEvent_t Get() const { return event_; }
-  void Record(cudaStream_t stream) { CudaStatusCheck(cudaEventRecord(event_, stream)); }
+  void Record(const TRTCudaStream& stream) { CudaStatusCheck(cudaEventRecord(event_, stream.Get())); }
   void Synchronize() { CudaStatusCheck(cudaEventSynchronize(event_)); }
   float operator-(const TRTCudaEvent& other) {
     float time{0};

@@ -149,7 +149,17 @@ using EnqueueTimes = std::array<TimePoint, 2>;
 class Iterator {
  public:
  private:
-  TRTCudaStream& getStream(StreamType t) { return stream_[static_cast<int>(t)]; }
+  void MoveNext() { next_ = depth_ - 1 - next_; }
+  TRTCudaStream& GetStream(StreamType t) { return stream_[static_cast<int>(t)]; }
+  TRTCudaEvent& GetEvent(EventType t) { return *events_[next_][static_cast<int>(t)]; }
+  void Record(EventType e, StreamType s) { GetEvent(e).Record(GetStream(s)); }
+
+  void RecordEnqueueTime() {
+    enqueue_times_[next_][enqueue_start_] = std::chrono::high_resolution_clock::now();
+    enqueue_start_ = 1 - enqueue_start_;
+  }
+  TimePoint GetEnqueueTime(bool start) { return enqueue_times_[next_][start ? 0 : 1]; }
+  void Wait(EventType e, StreamType s) { GetStream(s).Wait(GetEvent(e)); }
 
   void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context, Bindings& bindings) {
     if (inference.batch) {
@@ -159,7 +169,7 @@ class Iterator {
       ;
     }
     if (inference.graph) {
-      TRTCudaStream& stream = getStream(StreamType::kCOMPUTE);
+      TRTCudaStream& stream = GetStream(StreamType::kCOMPUTE);
       enqueue_(stream);
       stream.Synchronize();
       graph_.BeginCapture(stream);

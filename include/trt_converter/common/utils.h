@@ -10,8 +10,8 @@
 #include <unordered_map>
 
 #include "NvInfer.h"
-#include "device.h"
 #include "common.h"
+#include "device.h"
 #if CUDA_VERSION < 10000
 #include <half.h>
 #else
