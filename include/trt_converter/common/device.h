@@ -39,7 +39,13 @@ class TRTCudaStream {
   void Synchronize() { CudaStatusCheck(cudaStreamSynchronize(stream_)); }
   void Wait(TRTCudaEvent& event);
   cudaStream_t Get() const { return stream_; }
-  void Sleep(int* ms) { CudaStatusCheck(cudaStreamAddCallback(stream_, CudaSleep, ms, 0)); }
+  void Sleep(int* ms) {
+#if CUDA_VERSION < 10000
+    CudaStatusCheck(cudaStreamAddCallback(stream_, CudaSleep, ms, 0));
+#else
+    CudaStatusCheck(cudaLaunchHostFunc(stream_, CudaSleep, ms));
+#endif
+  }
 
  private:
   cudaStream_t stream_{};

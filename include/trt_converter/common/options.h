@@ -41,20 +41,29 @@ struct Options {
   virtual void Parse(Arguments& arguments) = 0;
 };
 
+struct BaseModelOptions : public Options {
+  ModelFormat format{ModelFormat::kAny};
+  std::string model;
+
+  void Parse(Arguments& arguments) override;
+
+  static void help(std::ostream& out);
+};
+
 struct UFFInput : Options {
   std::vector<std::pair<std::string, nvinfer1::Dims>> inputs;
-  bool is_nhwc = false;
+  bool NHWC = false;
   void Parse(Arguments& arguments) override;
-  static void Help(std::ostream& os);
+  static void help(std::ostream& os);
 };
 
 struct ModelOptions : public Options {
-  ModelFormat format;
-  std::string model;
+  BaseModelOptions base_model;
   std::string prototxt;
   std::vector<std::string> outputs;
+  UFFInput uff_inputs;
   void Parse(Arguments& arguments) override;
-  static void Help(std::ostream& os);
+  static void help(std::ostream& os);
 };
 
 struct InferenceOptions : public Options {
@@ -76,7 +85,7 @@ struct InferenceOptions : public Options {
 
   void Parse(Arguments& arguments) override;
 
-  static void Help(std::ostream& out);
+  static void help(std::ostream& out);
 };
 
 struct BuildOptions : public Options {
@@ -99,8 +108,8 @@ struct BuildOptions : public Options {
   std::unordered_map<std::string, ShapeRange> shapes_calib;
   std::vector<IOFormat> input_formats;
   std::vector<IOFormat> output_formats;
-  nvinfer1::TacticSources enabled_tactics{0};
-  nvinfer1::TacticSources disabled_tactics{0};
+  nvinfer1::TacticSources enabled_tactics = 0;
+  nvinfer1::TacticSources disabled_tactics = 0;
   void Parse(Arguments& arguments) override;
 
   static void help(std::ostream& out);
@@ -109,7 +118,7 @@ struct BuildOptions : public Options {
 struct SystemOptions : public Options {
   int device = kDefaultDevice;
   int DLACore = -1;
-  bool fallback{false};
+  bool fallback = false;
   std::vector<std::string> plugins;
 
   void Parse(Arguments& arguments) override;
