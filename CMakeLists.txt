@@ -12,15 +12,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61;-std=c++17;)
 set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always -fopenmp -fno-rtti -Wall -Wextra -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-invalid-offsetof")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 find_package(Threads REQUIRED)
 find_package(CUDA REQUIRED)
+find_package(Glog REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(include)
 include_directories(/home/sunjiahe/libs/TensorRT-7.2.3.4/include)
-link_libraries(${CUDA_LIBRARIES} Threads::Threads)
+link_libraries(${CUDA_LIBRARIES} Threads::Threads glog::glog)
 
 # include(cmake/fetch_google_benchmark.cmake)
 # include(cmake/fetch_google_test.cmake)

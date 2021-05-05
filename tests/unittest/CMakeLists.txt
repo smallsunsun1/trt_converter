@@ -12,3 +12,8 @@ add_executable(str_function_unittest str_function_unittest.cpp)
 target_link_libraries(str_function_unittest PUBLIC ${GTEST_LIBRARIES})
 target_include_directories(str_function_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
 add_test(NAME test_str_function COMMAND str_function_unittest)
+
+add_executable(logger_unittest logger_unittest.cpp)
+target_link_libraries(logger_unittest PUBLIC ${GTEST_LIBRARIES} common)
+target_include_directories(logger_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
+add_test(NAME test_logger COMMAND logger_unittest)
