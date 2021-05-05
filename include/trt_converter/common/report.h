@@ -41,7 +41,7 @@ struct InferenceTime {
 //!
 struct InferenceTrace {
   InferenceTrace(int s, float es, float ee, float is, float ie, float cs, float ce, float os, float oe)
-      : stream(s), enqStart(es), enqEnd(ee), inStart(is), inEnd(ie), computeStart(cs), computeEnd(ce), outStart(os), outEnd(oe) {}
+      : stream(s), enq_start(es), enq_end(ee), in_start(is), in_end(ie), compute_start(cs), compute_end(ce), out_start(os), out_end(oe) {}
 
   InferenceTrace() = default;
   InferenceTrace(const InferenceTrace&) = default;
@@ -51,14 +51,14 @@ struct InferenceTrace {
   ~InferenceTrace() = default;
 
   int stream{0};
-  float enqStart{0};
-  float enqEnd{0};
-  float inStart{0};
-  float inEnd{0};
-  float computeStart{0};
-  float computeEnd{0};
-  float outStart{0};
-  float outEnd{0};
+  float enq_start{0};
+  float enq_end{0};
+  float in_start{0};
+  float in_end{0};
+  float compute_start{0};
+  float compute_end{0};
+  float out_start{0};
+  float out_end{0};
 };
 
 inline InferenceTime operator+(const InferenceTime& a, const InferenceTime& b) {

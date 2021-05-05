@@ -53,7 +53,10 @@ class TRTCudaStream {
 
 class TRTCudaEvent {
  public:
-  TRTCudaEvent() { CudaStatusCheck(cudaEventCreate(&event_)); }
+  explicit TRTCudaEvent(bool blocking = true) {
+    const unsigned int flags = blocking ? cudaEventBlockingSync : cudaEventDefault;
+    CudaStatusCheck(cudaEventCreateWithFlags(&event_, flags));
+  }
   TRTCudaEvent(const TRTCudaEvent&) = delete;
   TRTCudaEvent& operator=(const TRTCudaEvent&) = delete;
   TRTCudaEvent(TRTCudaEvent&&) = delete;

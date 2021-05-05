@@ -5,7 +5,7 @@
 namespace sss {
 
 void Logger::log(Severity severity, const char *msg) TRTC_NOEXCEPT {
-  switch (severity) { 
+  switch (severity) {
     case Severity::kINFO:
       LOG(INFO) << msg;
       break;

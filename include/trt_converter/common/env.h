@@ -14,7 +14,7 @@ struct TRTInferenceEnvironment {
   TRTUniquePtr<nvinfer1::ICudaEngine> engine;
   std::unique_ptr<nvinfer1::IProfiler> profiler;
   std::vector<TRTUniquePtr<nvinfer1::IExecutionContext>> contexts;
-  std::vector<std::unique_ptr<Bindings>> bindings_;
+  std::vector<std::unique_ptr<Bindings>> bindings;
 };
 
 bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& options);
