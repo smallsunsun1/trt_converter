@@ -2,7 +2,6 @@
 #define INCLUDE_TRT_CONVERTER_COMMON_COMMON_
 
 #include <NvInfer.h>
-
 #include <iostream>
 #include <vector>
 

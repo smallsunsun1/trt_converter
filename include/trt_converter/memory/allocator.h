@@ -1,10 +1,10 @@
 #ifndef INCLUDE_TRT_CONVERTER_MEMORY_ALLOCATOR_
 #define INCLUDE_TRT_CONVERTER_MEMORY_ALLOCATOR_
 
+#include "trt_converter/common/macro.h"
+
 #include <cstddef>
 #include <cstdint>
-
-#include "trt_converter/common/macro.h"
 
 class Allocator {
   virtual void* Alloc(size_t size) = 0;

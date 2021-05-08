@@ -1,13 +1,12 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_REPORT_
 #define INCLUDE_TRT_CONVERTER_COMMON_REPORT_
 
-#include <NvInfer.h>
-
-#include <iostream>
-#include <vector>
-
 #include "trt_converter/common/options.h"
 #include "trt_converter/common/utils.h"
+
+#include <NvInfer.h>
+#include <iostream>
+#include <vector>
 
 namespace sss {
 

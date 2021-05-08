@@ -1,12 +1,13 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_DEVICE_
 #define INCLUDE_TRT_CONVERTER_COMMON_DEVICE_
 
+#include "trt_converter/memory/allocator.h"
+
 #include <chrono>
 #include <iostream>
 #include <thread>
 
 #include "cuda_runtime_api.h"
-#include "trt_converter/memory/allocator.h"
 
 namespace sss {
 

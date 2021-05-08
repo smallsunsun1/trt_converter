@@ -7,6 +7,7 @@
 #include "grpc++/grpc++.h"
 #include "proto/message.grpc.pb.h"
 #include "proto/message.pb.h"
+
 namespace sss {
 
 class SimpleServer {

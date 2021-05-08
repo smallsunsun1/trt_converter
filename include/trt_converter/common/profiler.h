@@ -1,13 +1,14 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_PROFILER_
 #define INCLUDE_TRT_CONVERTER_COMMON_PROFILER_
 
+#include "trt_converter/common/report.h"
+
 #include <chrono>
 #include <iostream>
 #include <string_view>
 #include <vector>
 
 #include "NvInfer.h"
-#include "trt_converter/common/report.h"
 
 namespace sss {
 class TimeScopedProfiler {

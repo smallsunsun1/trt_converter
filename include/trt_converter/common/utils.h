@@ -1,9 +1,8 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_UTILS_
 #define INCLUDE_TRT_CONVERTER_COMMON_UTILS_
 
-#include <cuda.h>
-
 #include <algorithm>
+#include <cuda.h>
 #include <fstream>
 #include <numeric>
 #include <random>
