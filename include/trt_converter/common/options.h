@@ -133,9 +133,9 @@ struct ReportingOptions : public Options {
   bool refit = false;
   bool output = false;
   bool profile = false;
-  std::string exportTimes;
-  std::string exportOutput;
-  std::string exportProfile;
+  std::string export_times;
+  std::string export_output;
+  std::string export_profile;
 
   void Parse(Arguments& arguments) override;
 

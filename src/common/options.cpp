@@ -549,9 +549,9 @@ void ReportingOptions::Parse(Arguments& arguments) {
   CheckEraseOption(arguments, "--dumpRefit", refit);
   CheckEraseOption(arguments, "--dumpOutput", output);
   CheckEraseOption(arguments, "--dumpProfile", profile);
-  CheckEraseOption(arguments, "--exportTimes", exportTimes);
-  CheckEraseOption(arguments, "--exportOutput", exportOutput);
-  CheckEraseOption(arguments, "--exportProfile", exportProfile);
+  CheckEraseOption(arguments, "--exportTimes", export_times);
+  CheckEraseOption(arguments, "--exportOutput", export_output);
+  CheckEraseOption(arguments, "--exportProfile", export_profile);
   if (percentile < 0 || percentile > 100) {
     throw std::invalid_argument(std::string("Percentile ") + std::to_string(percentile) + "is not in [0,100]");
   }
@@ -898,9 +898,9 @@ std::ostream& operator<<(std::ostream& os, const ReportingOptions& options) {
           "Dump refittable layers:"            << BoolToEnabled(options.refit)      << std::endl <<
           "Dump output: "                      << BoolToEnabled(options.output)     << std::endl <<
           "Profile: "                          << BoolToEnabled(options.profile)    << std::endl <<
-          "Export timing to JSON file: "       << options.exportTimes               << std::endl <<
-          "Export output to JSON file: "       << options.exportOutput              << std::endl <<
-          "Export profile to JSON file: "      << options.exportProfile             << std::endl;
+          "Export timing to JSON file: "       << options.export_times               << std::endl <<
+          "Export output to JSON file: "       << options.export_output              << std::endl <<
+          "Export profile to JSON file: "      << options.export_profile             << std::endl;
   // clang-format on
 
   return os;
