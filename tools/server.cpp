@@ -7,7 +7,6 @@
 #include "grpc++/grpc++.h"
 #include "proto/message.grpc.pb.h"
 #include "proto/message.pb.h"
-
 namespace sss {
 
 class SimpleServer {
@@ -34,7 +33,8 @@ class SimpleServer {
 
  private:
   struct CallData {
-    CallData(RpcWork::AsyncService* service, grpc::ServerCompletionQueue* queue) : service(service), queue(queue), responder_(&ctx_), status(CREATE) {
+    CallData(RpcWork::AsyncService* service, grpc::ServerCompletionQueue* queue)
+        : service(service), queue(queue), responder_(&ctx_), status(CREATE) {
       Proceed();
     }
     void Proceed() {
@@ -134,7 +134,8 @@ class SimpleStreamServer {
     constexpr uint32_t kNumCalls = 1000;
     for (uint32_t connection_num = 0; connection_num < kNumCalls; ++connection_num) {
       for (size_t i = 0; i < server_queues_.size(); ++i) {
-        async_call_impl_queue_.emplace_back(new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
+        async_call_impl_queue_.emplace_back(
+            new AsyncCallDataImpl(service_.get(), server_queues_[i].get(), run_context_, compute_func_));
       }
     }
     for (size_t i = 0; i < threads_.size(); ++i) {
@@ -174,8 +175,8 @@ class SimpleStreamServer {
  private:
   class AsyncCallDataImpl : public RpcServerContext {
    public:
-    AsyncCallDataImpl(RpcWork::AsyncService* service, grpc::ServerCompletionQueue* queue, async::HostContext* job_context,
-                      std::function<grpc::Status(Request*, Response*)> invoke_func)
+    AsyncCallDataImpl(RpcWork::AsyncService* service, grpc::ServerCompletionQueue* queue,
+                      async::HostContext* job_context, std::function<grpc::Status(Request*, Response*)> invoke_func)
         : server_context_(new grpc::ServerContext),
           complete_queue_(queue),
           service_(service),
@@ -185,7 +186,8 @@ class SimpleStreamServer {
       req = std::make_unique<Request>();
       res = std::make_unique<Response>();
       stream_ = std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context_.get());
-      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_, reinterpret_cast<void*>(this));
+      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_,
+                                        reinterpret_cast<void*>(this));
     }
     ~AsyncCallDataImpl() {}
     bool RunNextStep(bool ok) override { return (this->*next_state_)(ok); }
@@ -195,7 +197,8 @@ class SimpleStreamServer {
       res.reset(new Response);
       stream_ = std::make_unique<grpc::ServerAsyncReaderWriter<Response, Request>>(server_context_.get());
       next_state_ = &AsyncCallDataImpl::RequestDone;
-      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_, reinterpret_cast<void*>(this));
+      service_->RequestRemoteStreamCall(server_context_.get(), stream_.get(), complete_queue_, complete_queue_,
+                                        reinterpret_cast<void*>(this));
     }
 
    private:

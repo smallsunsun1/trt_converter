@@ -62,9 +62,15 @@ template <>
 nvinfer1::TensorFormats StringToValue<nvinfer1::TensorFormats>(const std::string& option) {
   std::vector<std::string> option_strings = SplitToStringVec(option, "+");
   const std::unordered_map<std::string, nvinfer1::TensorFormat> str_to_Fmt{
-      {"chw", nvinfer1::TensorFormat::kLINEAR},       {"chw2", nvinfer1::TensorFormat::kCHW2},   {"chw4", nvinfer1::TensorFormat::kCHW4},
-      {"hwc8", nvinfer1::TensorFormat::kHWC8},        {"chw16", nvinfer1::TensorFormat::kCHW16}, {"chw32", nvinfer1::TensorFormat::kCHW32},
-      {"dhwc8", nvinfer1::TensorFormat::kDHWC8},      {"hwc", nvinfer1::TensorFormat::kHWC},     {"dla_linear", nvinfer1::TensorFormat::kDLA_LINEAR},
+      {"chw", nvinfer1::TensorFormat::kLINEAR},
+      {"chw2", nvinfer1::TensorFormat::kCHW2},
+      {"chw4", nvinfer1::TensorFormat::kCHW4},
+      {"hwc8", nvinfer1::TensorFormat::kHWC8},
+      {"chw16", nvinfer1::TensorFormat::kCHW16},
+      {"chw32", nvinfer1::TensorFormat::kCHW32},
+      {"dhwc8", nvinfer1::TensorFormat::kDHWC8},
+      {"hwc", nvinfer1::TensorFormat::kHWC},
+      {"dla_linear", nvinfer1::TensorFormat::kDLA_LINEAR},
       {"dla_hwc4", nvinfer1::TensorFormat::kDLA_HWC4}};
   nvinfer1::TensorFormats formats{};
   for (auto f : option_strings) {
@@ -153,12 +159,13 @@ bool CheckEraseRepeatedOption(Arguments& arguments, const std::string& option, s
   return true;
 }
 
-void InsertShapesBuild(std::unordered_map<std::string, ShapeRange>& shapes, nvinfer1::OptProfileSelector selector, const std::string& name,
-                       const std::vector<int>& dims) {
+void InsertShapesBuild(std::unordered_map<std::string, ShapeRange>& shapes, nvinfer1::OptProfileSelector selector,
+                       const std::string& name, const std::vector<int>& dims) {
   shapes[name][static_cast<size_t>(selector)] = dims;
 }
 
-void InsertShapesInference(std::unordered_map<std::string, std::vector<int>>& shapes, const std::string& name, const std::vector<int>& dims) {
+void InsertShapesInference(std::unordered_map<std::string, std::vector<int>>& shapes, const std::string& name,
+                           const std::vector<int>& dims) {
   shapes[name] = dims;
 }
 
@@ -187,7 +194,8 @@ bool GetShapesBuild(Arguments& arguments, std::unordered_map<std::string, ShapeR
   return ret_val;
 }
 
-bool GetShapesInference(Arguments& arguments, std::unordered_map<std::string, std::vector<int>>& shapes, const char* argument) {
+bool GetShapesInference(Arguments& arguments, std::unordered_map<std::string, std::vector<int>>& shapes,
+                        const char* argument) {
   std::string list;
   bool ret_val = CheckEraseOption(arguments, argument, list);
   std::vector<std::string> shape_list{SplitToStringVec(list, ",")};
@@ -200,14 +208,16 @@ bool GetShapesInference(Arguments& arguments, std::unordered_map<std::string, st
   return ret_val;
 }
 
-void ProcessShapes(std::unordered_map<std::string, ShapeRange>& shapes, bool minShapes, bool opt_shapes, bool max_shapes, bool calib) {
+void ProcessShapes(std::unordered_map<std::string, ShapeRange>& shapes, bool minShapes, bool opt_shapes,
+                   bool max_shapes, bool calib) {
   // Only accept optShapes only or all three of minShapes, optShapes, maxShapes
   if (((minShapes || max_shapes) && !opt_shapes)    // minShapes only, maxShapes only, both minShapes and maxShapes
       || (minShapes && !max_shapes && opt_shapes)   // both minShapes and optShapes
       || (!minShapes && max_shapes && opt_shapes))  // both maxShapes and optShapes
   {
     if (calib) {
-      throw std::invalid_argument("Must specify only --optShapesCalib or all of --minShapesCalib, --optShapesCalib, --maxShapesCalib");
+      throw std::invalid_argument(
+          "Must specify only --optShapesCalib or all of --minShapesCalib, --optShapesCalib, --maxShapesCalib");
     } else {
       throw std::invalid_argument("Must specify only --optShapes or all of --minShapes, --optShapes, --maxShapes");
     }
@@ -217,9 +227,12 @@ void ProcessShapes(std::unordered_map<std::string, ShapeRange>& shapes, bool min
   if (opt_shapes && !minShapes && !max_shapes) {
     std::unordered_map<std::string, ShapeRange> new_shapes;
     for (auto& s : shapes) {
-      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kMIN, s.first, s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
-      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kOPT, s.first, s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
-      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kMAX, s.first, s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
+      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kMIN, s.first,
+                        s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
+      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kOPT, s.first,
+                        s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
+      InsertShapesBuild(new_shapes, nvinfer1::OptProfileSelector::kMAX, s.first,
+                        s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
     }
     shapes = new_shapes;
   }
@@ -245,7 +258,8 @@ std::ostream& PrintBatch(std::ostream& os, int maxBatch) {
   return os;
 }
 
-std::ostream& PrintTacticSources(std::ostream& os, nvinfer1::TacticSources enabledSources, nvinfer1::TacticSources disabledSources) {
+std::ostream& PrintTacticSources(std::ostream& os, nvinfer1::TacticSources enabledSources,
+                                 nvinfer1::TacticSources disabledSources) {
   if (!enabledSources && !disabledSources) {
     os << "Using default tactic sources";
   } else {
@@ -387,7 +401,8 @@ void BuildOptions::Parse(Arguments& arguments) {
   int batch{0};
   CheckEraseOption(arguments, "--maxBatch", batch);
   if (explicitBatch && batch) {
-    throw std::invalid_argument("Explicit batch or dynamic shapes enabled with implicit maxBatch " + std::to_string(batch));
+    throw std::invalid_argument("Explicit batch or dynamic shapes enabled with implicit maxBatch " +
+                                std::to_string(batch));
   }
 
   if (explicitBatch) {
@@ -515,7 +530,8 @@ void InferenceOptions::Parse(Arguments& arguments) {
   int batchOpt{0};
   CheckEraseOption(arguments, "--batch", batchOpt);
   if (!shapes.empty() && batchOpt) {
-    throw std::invalid_argument("Explicit batch or dynamic shapes enabled with implicit batch " + std::to_string(batchOpt));
+    throw std::invalid_argument("Explicit batch or dynamic shapes enabled with implicit batch " +
+                                std::to_string(batchOpt));
   }
   if (batchOpt) {
     batch = batchOpt;
@@ -575,7 +591,8 @@ void AllOptions::Parse(Arguments& arguments) {
   } else {
     if (!build.shapes.empty() && inference.shapes.empty()) {
       for (auto& s : build.shapes) {
-        InsertShapesInference(inference.shapes, s.first, s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
+        InsertShapesInference(inference.shapes, s.first,
+                              s.second[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
       }
     }
     if (!build.max_batch) {
@@ -587,8 +604,8 @@ void AllOptions::Parse(Arguments& arguments) {
     // For implicit batch, check for compatibility and if --maxBatch is not given and inference batch is greater
     // than maxBatch, use inference batch also for maxBatch
     if (build.max_batch != kDefaultMaxBatch && build.max_batch < inference.batch) {
-      throw std::invalid_argument("Build max batch " + std::to_string(build.max_batch) + " is less than inference batch " +
-                                  std::to_string(inference.batch));
+      throw std::invalid_argument("Build max batch " + std::to_string(build.max_batch) +
+                                  " is less than inference batch " + std::to_string(inference.batch));
     } else {
       if (build.max_batch < inference.batch) {
         build.max_batch = inference.batch;

@@ -10,13 +10,14 @@
 #include <unordered_map>
 
 #include "NvInfer.h"
-#include "common.h"
-#include "device.h"
 #if CUDA_VERSION < 10000
 #include <half.h>
 #else
 #include <cuda_fp16.h>
 #endif
+
+#include "trt_converter/common/common.h"
+#include "trt_converter/common/device.h"
 
 namespace sss {
 
@@ -123,7 +124,8 @@ struct Binding {
         break;
       }
       case nvinfer1::DataType::kINT8: {
-        FillBuffer(buffer.GetHostBuffer(), volume, std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
+        FillBuffer(buffer.GetHostBuffer(), volume, std::numeric_limits<int8_t>::min(),
+                   std::numeric_limits<int8_t>::max());
         break;
       }
       case nvinfer1::DataType::kINT32: {
@@ -132,7 +134,8 @@ struct Binding {
       }
       case nvinfer1::DataType::kHALF: {
 #if CUDA_VERSION < 10000
-        FillBuffer<half_float::half>(buffer.GetHostBuffer(), volume, static_cast<half_float::half>(-1.0), static_cast<half_float::half>(-1.0));
+        FillBuffer<half_float::half>(buffer.GetHostBuffer(), volume, static_cast<half_float::half>(-1.0),
+                                     static_cast<half_float::half>(-1.0));
 #else
         FillBuffer<__half>(buffer.GetHostBuffer(), volume, -1.0, 1.0);
 #endif
@@ -176,7 +179,8 @@ struct Binding {
 
 class Bindings {
  public:
-  void AddBinding(int b, const std::string& name, bool is_input, int volume, nvinfer1::DataType data_type, const std::string& filename = "") {
+  void AddBinding(int b, const std::string& name, bool is_input, int volume, nvinfer1::DataType data_type,
+                  const std::string& filename = "") {
     bindings_.resize(b);
     device_pointers_.resize(b);
     names_[name] = b;
@@ -211,7 +215,9 @@ class Bindings {
     os << dims;
   }
 
-  void DumpBindingValues(int binding, std::ostream& os, const std::string& separator = " ") const { bindings_[binding].Dump(os, separator); }
+  void DumpBindingValues(int binding, std::ostream& os, const std::string& separator = " ") const {
+    bindings_[binding].Dump(os, separator);
+  }
   void DumpInputs(const nvinfer1::IExecutionContext& context, std::ostream& os) const {
     auto is_input = [](const Binding& b) { return b.is_input; };
     DumpBindings(context, is_input, os);
@@ -227,7 +233,8 @@ class Bindings {
     DumpBindings(context, all, os);
   }
 
-  void DumpBindings(const nvinfer1::IExecutionContext& context, bool (*predicate)(const Binding& b), std::ostream& os) const {
+  void DumpBindings(const nvinfer1::IExecutionContext& context, bool (*predicate)(const Binding& b),
+                    std::ostream& os) const {
     for (const auto& n : names_) {
       const auto binding = n.second;
       if (predicate(bindings_[binding])) {

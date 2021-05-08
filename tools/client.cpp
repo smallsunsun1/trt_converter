@@ -86,14 +86,16 @@ int main(int argc, char* argv[]) {
   grpc::ChannelArguments arguments;
   grpc::EnableDefaultHealthCheckService(true);
   arguments.SetLoadBalancingPolicyName("grpclb");
-  //   sss::SimpleClient client(grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), arguments));
+  //   sss::SimpleClient client(grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(),
+  //   arguments));
   // #pragma omp parallel for schedule(dynamic)
   //   for (int i = 0; i < 10000000; ++i) {
   //     std::string name = "sss";
   //     std::string reply = client.RemoteCall(name);
   //     std::cout << "Greeter Received " << reply << std::endl;
   //   }
-  sss::SimpleStreamClient client(grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), arguments));
+  sss::SimpleStreamClient client(
+      grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), arguments));
   sss::Request req;
   req.set_type("sss");
   client.StreamRemoteCall(std::move(req));

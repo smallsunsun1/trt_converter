@@ -23,7 +23,9 @@ inline void CudaSleep(cudaStream_t stream, cudaError_t status, void* sleep) {
   std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
 }
 #else
-inline void CudaSleep(void* sleep) { std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep))); }
+inline void CudaSleep(void* sleep) {
+  std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(*static_cast<int*>(sleep)));
+}
 #endif
 
 class TRTCudaEvent;
@@ -167,10 +169,12 @@ class MirroredBuffer {
     device_buffer_.Allocate(size);
   }
   void DeviceToHost(TRTCudaStream& stream) {
-    CudaStatusCheck(cudaMemcpyAsync(host_buffer_.Get(), device_buffer_.Get(), size_, cudaMemcpyDeviceToHost, stream.Get()));
+    CudaStatusCheck(
+        cudaMemcpyAsync(host_buffer_.Get(), device_buffer_.Get(), size_, cudaMemcpyDeviceToHost, stream.Get()));
   }
   void HostToDevice(TRTCudaStream& stream) {
-    CudaStatusCheck(cudaMemcpyAsync(device_buffer_.Get(), host_buffer_.Get(), size_, cudaMemcpyHostToDevice, stream.Get()));
+    CudaStatusCheck(
+        cudaMemcpyAsync(device_buffer_.Get(), host_buffer_.Get(), size_, cudaMemcpyHostToDevice, stream.Get()));
   }
   void* GetDeviceBuffer() const { return device_buffer_.Get(); }
   void* GetHostBuffer() const { return host_buffer_.Get(); }

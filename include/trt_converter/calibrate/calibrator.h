@@ -15,7 +15,8 @@ namespace sss {
 template <typename Stream>
 class EntropyCalibratorImpl {
  public:
-  EntropyCalibratorImpl(Stream stream, uint32_t first_batch, std::string network_name, const char* input_blob_name, bool read_cache = true)
+  EntropyCalibratorImpl(Stream stream, uint32_t first_batch, std::string network_name, const char* input_blob_name,
+                        bool read_cache = true)
       : stream_(std::move(stream)),
         calibrate_string_name_("CalibrationTable" + network_name),
         input_blob_name_(input_blob_name),
@@ -34,7 +35,8 @@ class EntropyCalibratorImpl {
     if (!stream_.Next()) {
       return false;
     }
-    CUDA_CHECK(cudaMemCpy(device_input_, stream_.GetBatch().get(), input_count_ * sizeof(float), cudaMemcpyHostToDevice));
+    CUDA_CHECK(
+        cudaMemCpy(device_input_, stream_.GetBatch().get(), input_count_ * sizeof(float), cudaMemcpyHostToDevice));
     assert(!strcmp(names[0], input_blob_name_.data()));
     bindings[0] = device_input_;
     return true;
@@ -43,7 +45,8 @@ class EntropyCalibratorImpl {
   const void* readCalibrationCache(size_t& length) {
     std::ifstream file_data(calibrate_string_name_, std::ios::binary);
     if (read_cache_ && file_data.good()) {
-      std::copy(std::istreambuf_iterator<char>(file_data), std::istreambuf_iterator<char>(), std::back_inserter(calibration_cache_));
+      std::copy(std::istreambuf_iterator<char>(file_data), std::istreambuf_iterator<char>(),
+                std::back_inserter(calibration_cache_));
     }
     length = calibration_cache_.size();
     return length ? calibration_cache_.data() : nullptr;
@@ -66,16 +69,21 @@ class EntropyCalibratorImpl {
 template <typename Stream>
 class Int8EntropyCalibrator : public nvinfer1::IInt8EntropyCalibrator2 {
  public:
-  Int8EntropyCalibrator(Stream stream, int first_batch, const char* network_name, const char* input_blob_name, bool read_cache = true)
+  Int8EntropyCalibrator(Stream stream, int first_batch, const char* network_name, const char* input_blob_name,
+                        bool read_cache = true)
       : calib_impl_(stream, first_batch, network_name, input_blob_name, read_cache) {}
 
   int getBatchSize() const override { return calib_impl_.getBatchSize(); }
 
-  bool getBatch(void* bindings[], const char* names[], int nbBindings) override { return calib_impl_.getBatch(bindings, names, nbBindings); }
+  bool getBatch(void* bindings[], const char* names[], int nbBindings) override {
+    return calib_impl_.getBatch(bindings, names, nbBindings);
+  }
 
   const void* readCalibrationCache(size_t& length) override { return calib_impl_.readCalibrationCache(length); }
 
-  void writeCalibrationCache(const void* cache, size_t length) override { calib_impl_.writeCalibrationCache(cache, length); }
+  void writeCalibrationCache(const void* cache, size_t length) override {
+    calib_impl_.writeCalibrationCache(cache, length);
+  }
 
  private:
   EntropyCalibratorImpl<Stream> calib_impl_;

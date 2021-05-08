@@ -41,7 +41,15 @@ struct InferenceTime {
 //!
 struct InferenceTrace {
   InferenceTrace(int s, float es, float ee, float is, float ie, float cs, float ce, float os, float oe)
-      : stream(s), enq_start(es), enq_end(ee), in_start(is), in_end(ie), compute_start(cs), compute_end(ce), out_start(os), out_end(oe) {}
+      : stream(s),
+        enq_start(es),
+        enq_end(ee),
+        in_start(is),
+        in_end(ie),
+        compute_start(cs),
+        compute_end(ce),
+        out_start(os),
+        out_end(oe) {}
 
   InferenceTrace() = default;
   InferenceTrace(const InferenceTrace&) = default;
@@ -70,43 +78,44 @@ inline InferenceTime operator+=(InferenceTime& a, const InferenceTime& b) { retu
 //!
 //! \brief Print benchmarking time and number of traces collected
 //!
-void printProlog(int warmups, int timings, float warmupMs, float walltime, std::ostream& os);
+void PrintProlog(int warmups, int timings, float warmupMs, float walltime, std::ostream& os);
 
 //!
 //! \brief Print a timing trace
 //!
-void printTiming(const std::vector<InferenceTime>& timings, int runsPerAvg, std::ostream& os);
+void PrintTiming(const std::vector<InferenceTime>& timings, int runsPerAvg, std::ostream& os);
 
 //!
 //! \brief Print the performance summary of a trace
 //!
-void printEpilog(std::vector<InferenceTime> timings, float percentile, int queries, std::ostream& os);
+void PrintEpilog(std::vector<InferenceTime> timings, float percentile, int queries, std::ostream& os);
 
 //!
 //! \brief Print and summarize a timing trace
 //!
-void printPerformanceReport(const std::vector<InferenceTrace>& trace, const ReportingOptions& reporting, float warmupMs, int queries,
-                            std::ostream& os);
+void PrintPerformanceReport(const std::vector<InferenceTrace>& trace, const ReportingOptions& reporting, float warmupMs,
+                            int queries, std::ostream& os);
 
 //!
 //! \brief Export a timing trace to JSON file
 //!
-void exportJSONTrace(const std::vector<InferenceTrace>& trace, const std::string& fileName);
+void ExportJSONTrace(const std::vector<InferenceTrace>& trace, const std::string& fileName);
 
 //!
 //! \brief Print input tensors to stream
 //!
-void dumpInputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os);
+void DumpInputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os);
 
 //!
 //! \brief Print output tensors to stream
 //!
-void dumpOutputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os);
+void DumpOutputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os);
 
 //!
 //! \brief Export output tensors to JSON file
 //!
-void exportJSONOutput(const nvinfer1::IExecutionContext& context, const Bindings& bindings, const std::string& fileName);
+void ExportJSONOutput(const nvinfer1::IExecutionContext& context, const Bindings& bindings,
+                      const std::string& fileName);
 
 }  // namespace sss
 

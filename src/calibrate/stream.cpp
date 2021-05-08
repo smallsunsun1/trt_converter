@@ -20,7 +20,8 @@ std::vector<float> ImageDataStream::ReadImageData(const std::string& filename) {
   std::istreambuf_iterator<char> end;
   std::string result(begin, end);
   std::vector<float> final_res;
-  std::transform(result.begin(), result.end(), std::back_inserter(final_res), [](char value) { return static_cast<float>(value); });
+  std::transform(result.begin(), result.end(), std::back_inserter(final_res),
+                 [](char value) { return static_cast<float>(value); });
   return final_res;
 }
 

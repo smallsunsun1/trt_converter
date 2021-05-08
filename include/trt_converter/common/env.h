@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "NvInfer.h"
-#include "options.h"
-#include "profiler.h"
-#include "utils.h"
+#include "trt_converter/common/options.h"
+#include "trt_converter/common/profiler.h"
+#include "trt_converter/common/utils.h"
 namespace sss {
 
 struct TRTInferenceEnvironment {

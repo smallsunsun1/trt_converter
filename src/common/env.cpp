@@ -34,7 +34,8 @@ bool SetupInference(TRTInferenceEnvironment& env, const InferenceOptions& option
     if (env.engine->bindingIsInput(b)) {
       auto dims = env.contexts.front()->getBindingDimensions(b);
       const bool is_scalar = dims.nbDims == 0;
-      const bool is_dynamic_input = std::any_of(dims.d, dims.d + dims.nbDims, [](int dim) { return dim == -1; }) || env.engine->isShapeBinding(b);
+      const bool is_dynamic_input =
+          std::any_of(dims.d, dims.d + dims.nbDims, [](int dim) { return dim == -1; }) || env.engine->isShapeBinding(b);
       if (is_dynamic_input) {
         auto shape = options.shapes.find(env.engine->getBindingName(b));
         std::vector<int> static_dims;
@@ -115,7 +116,8 @@ struct Enqueue {
 
 class EnqueueImplicit : Enqueue {
  public:
-  EnqueueImplicit(nvinfer1::IExecutionContext& context, void** buffers, uint32_t batch) : Enqueue(context, buffers), batch(batch) {}
+  EnqueueImplicit(nvinfer1::IExecutionContext& context, void** buffers, uint32_t batch)
+      : Enqueue(context, buffers), batch(batch) {}
   void operator()(TRTCudaStream& stream) const { context.enqueue(batch, buffers, stream.Get(), nullptr); }
 
  private:
@@ -139,7 +141,15 @@ using EnqueueFunction = std::function<void(TRTCudaStream&)>;
 
 enum class StreamType : int { kINPUT = 0, kCOMPUTE = 1, kOUTPUT = 2, kNUM = 3 };
 
-enum class EventType : int { kINPUT_S = 0, kINPUT_E = 1, kCOMPUTE_S = 2, kCOMPUTE_E = 3, kOUTPUT_S = 4, kOUTPUT_E = 5, kNUM = 6 };
+enum class EventType : int {
+  kINPUT_S = 0,
+  kINPUT_E = 1,
+  kCOMPUTE_S = 2,
+  kCOMPUTE_E = 3,
+  kOUTPUT_S = 4,
+  kOUTPUT_E = 5,
+  kNUM = 6
+};
 using MultiStream = std::array<TRTCudaStream, static_cast<int>(StreamType::kNUM)>;
 
 using MultiEvent = std::array<std::unique_ptr<TRTCudaEvent>, static_cast<int>(EventType::kNUM)>;
@@ -149,7 +159,12 @@ using EnqueueTimes = std::array<TimePoint, 2>;
 class Iteration {
  public:
   Iteration(int id, const InferenceOptions& inference, nvinfer1::IExecutionContext& context, Bindings& bindings)
-      : bindings_(bindings), stream_id_(id), depth_(1 + inference.overlap), active_(depth_), events_(depth_), enqueue_times_(depth_) {
+      : bindings_(bindings),
+        stream_id_(id),
+        depth_(1 + inference.overlap),
+        active_(depth_),
+        events_(depth_),
+        enqueue_times_(depth_) {
     for (uint32_t d = 0; d < depth_; ++d) {
       for (int e = 0; e < static_cast<int>(EventType::kNUM); ++e) {
         events_[d][e].reset(new TRTCudaEvent(!inference.spin));
@@ -186,7 +201,8 @@ class Iteration {
     active_[next_] = true;
     MoveNext();
   }
-  float Sync(const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, std::vector<InferenceTrace>& trace, bool skip_transfers) {
+  float Sync(const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, std::vector<InferenceTrace>& trace,
+             bool skip_transfers) {
     if (active_[next_]) {
       if (skip_transfers) {
         GetEvent(EventType::kCOMPUTE_E).Synchronize();
@@ -200,7 +216,8 @@ class Iteration {
     return 0;
   }
 
-  void SyncAll(const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, std::vector<InferenceTrace>& trace, bool skip_transfers) {
+  void SyncAll(const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, std::vector<InferenceTrace>& trace,
+               bool skip_transfers) {
     for (uint32_t d = 0; d < depth_; ++d) {
       Sync(cpu_start, gpu_start, trace, skip_transfers);
       MoveNext();
@@ -228,14 +245,18 @@ class Iteration {
   InferenceTrace getTrace(const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, bool skip_transfers) {
     float is = skip_transfers ? GetEvent(EventType::kCOMPUTE_S) - gpu_start : GetEvent(EventType::kINPUT_S) - gpu_start;
     float ie = skip_transfers ? GetEvent(EventType::kCOMPUTE_S) - gpu_start : GetEvent(EventType::kINPUT_E) - gpu_start;
-    float os = skip_transfers ? GetEvent(EventType::kCOMPUTE_E) - gpu_start : GetEvent(EventType::kOUTPUT_S) - gpu_start;
-    float oe = skip_transfers ? GetEvent(EventType::kCOMPUTE_E) - gpu_start : GetEvent(EventType::kOUTPUT_E) - gpu_start;
-    return InferenceTrace(stream_id_, std::chrono::duration<float, std::milli>(GetEnqueueTime(true) - cpu_start).count(),
-                          std::chrono::duration<float, std::milli>(GetEnqueueTime(false) - cpu_start).count(), is, ie,
-                          GetEvent(EventType::kCOMPUTE_S) - gpu_start, GetEvent(EventType::kCOMPUTE_E) - gpu_start, os, oe);
+    float os =
+        skip_transfers ? GetEvent(EventType::kCOMPUTE_E) - gpu_start : GetEvent(EventType::kOUTPUT_S) - gpu_start;
+    float oe =
+        skip_transfers ? GetEvent(EventType::kCOMPUTE_E) - gpu_start : GetEvent(EventType::kOUTPUT_E) - gpu_start;
+    return InferenceTrace(
+        stream_id_, std::chrono::duration<float, std::milli>(GetEnqueueTime(true) - cpu_start).count(),
+        std::chrono::duration<float, std::milli>(GetEnqueueTime(false) - cpu_start).count(), is, ie,
+        GetEvent(EventType::kCOMPUTE_S) - gpu_start, GetEvent(EventType::kCOMPUTE_E) - gpu_start, os, oe);
   }
 
-  void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context, Bindings& bindings) {
+  void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context,
+                             Bindings& bindings) {
     if (inference.batch) {
       enqueue_ = EnqueueFunction(EnqueueImplicit(context, bindings_.GetDeviceBuffers(), inference.batch));
     } else {
@@ -267,8 +288,9 @@ class Iteration {
 
 using IterationStreams = std::vector<std::unique_ptr<Iteration>>;
 
-void InferenceLoop(IterationStreams& i_streams, const TimePoint& cpu_start, const TRTCudaEvent& gpu_start, int iterations, float max_duration_ms,
-                   float warmup_ms, std::vector<InferenceTrace>& trace, bool skip_transfers) {
+void InferenceLoop(IterationStreams& i_streams, const TimePoint& cpu_start, const TRTCudaEvent& gpu_start,
+                   int iterations, float max_duration_ms, float warmup_ms, std::vector<InferenceTrace>& trace,
+                   bool skip_transfers) {
   float duration_ms = 0;
   int skip = 0;
 
@@ -293,8 +315,8 @@ void InferenceLoop(IterationStreams& i_streams, const TimePoint& cpu_start, cons
   }
 }
 
-void InferenceExecution(const InferenceOptions& inference, TRTInferenceEnvironment& i_env, SyncStruct& sync, int offset, int streams, int device,
-                        std::vector<InferenceTrace>& trace) {
+void InferenceExecution(const InferenceOptions& inference, TRTInferenceEnvironment& i_env, SyncStruct& sync, int offset,
+                        int streams, int device, std::vector<InferenceTrace>& trace) {
   float warmup_ms = static_cast<float>(inference.warmup);
   float duration_ms = static_cast<float>(inference.duration) * 1000 + warmup_ms;
 
@@ -314,7 +336,8 @@ void InferenceExecution(const InferenceOptions& inference, TRTInferenceEnvironme
   }
 
   std::vector<InferenceTrace> local_trace;
-  InferenceLoop(i_streams, sync.cpu_start, sync.gpu_start, inference.iterations, duration_ms, warmup_ms, local_trace, inference.skip_transfers);
+  InferenceLoop(i_streams, sync.cpu_start, sync.gpu_start, inference.iterations, duration_ms, warmup_ms, local_trace,
+                inference.skip_transfers);
 
   if (inference.skip_transfers) {
     for (auto& s : i_streams) {
@@ -327,6 +350,37 @@ void InferenceExecution(const InferenceOptions& inference, TRTInferenceEnvironme
   sync.mutex.unlock();
 }
 
+inline std::thread MakeThread(const InferenceOptions& inference, TRTInferenceEnvironment& i_env, SyncStruct& sync,
+                              int thread, int streams_per_thread, int device, std::vector<InferenceTrace>& trace) {
+  return std::thread(InferenceExecution, std::cref(inference), std::ref(i_env), std::ref(sync), thread,
+                     streams_per_thread, device, std::ref(trace));
+}
+
 }  // namespace
+
+void RunInference(const InferenceOptions& inference, TRTInferenceEnvironment& i_env, int device,
+                  std::vector<InferenceTrace>& trace) {
+  trace.resize(0);
+
+  SyncStruct sync;
+  sync.sleep = inference.sleep;
+  sync.main_stream.Sleep(&sync.sleep);
+  sync.cpu_start = std::chrono::high_resolution_clock::now();
+  sync.gpu_start.Record(sync.main_stream);
+
+  int threadsNum = inference.threads ? inference.streams : 1;
+  int streamsPerThread = inference.streams / threadsNum;
+
+  std::vector<std::thread> threads;
+  for (int t = 0; t < threadsNum; ++t) {
+    threads.emplace_back(MakeThread(inference, i_env, sync, t, streamsPerThread, device, trace));
+  }
+  for (auto& th : threads) {
+    th.join();
+  }
+
+  auto cmpTrace = [](const InferenceTrace& a, const InferenceTrace& b) { return a.in_start < b.in_start; };
+  std::sort(trace.begin(), trace.end(), cmpTrace);
+}
 
 }  // namespace sss

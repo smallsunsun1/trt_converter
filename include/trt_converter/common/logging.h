@@ -3,7 +3,7 @@
 
 #include "NvInferRuntimeCommon.h"
 #include "glog/logging.h"
-#include "macro.h"
+#include "trt_converter/common/macro.h"
 
 namespace sss {
 
