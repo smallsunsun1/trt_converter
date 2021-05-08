@@ -1,9 +1,9 @@
 #include "trt_converter/common/options.h"
 
+#include <regex>
+
 #include "trt_converter/common/common.h"
 #include "trt_converter/common/utils.h"
-
-#include <regex>
 namespace sss {
 
 namespace {

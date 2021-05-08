@@ -1,8 +1,6 @@
 #ifndef INCLUDE_TRT_CONVERTER_CALIBRATE_CALIBRATOR_
 #define INCLUDE_TRT_CONVERTER_CALIBRATE_CALIBRATOR_
 
-#include "trt_converter/common/macro.h"
-
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -10,6 +8,7 @@
 
 #include "NvInfer.h"
 #include "cuda_runtime_api.h"
+#include "trt_converter/common/macro.h"
 
 namespace sss {
 

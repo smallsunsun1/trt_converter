@@ -1,10 +1,9 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_LOGGING_
 #define INCLUDE_TRT_CONVERTER_COMMON_LOGGING_
 
-#include "trt_converter/common/macro.h"
-
 #include "NvInferRuntimeCommon.h"
 #include "glog/logging.h"
+#include "trt_converter/common/macro.h"
 
 namespace sss {
 
