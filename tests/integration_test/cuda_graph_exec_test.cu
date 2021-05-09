@@ -14,6 +14,8 @@ __global__ void Compute(int *a, uint32_t n) {
 } 
 
 int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
     cudaSetDevice(0);
     TRTCudaGraph graph;
     TRTCudaStream stream;

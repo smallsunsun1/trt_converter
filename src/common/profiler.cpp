@@ -18,7 +18,7 @@ void Profiler::Print(std::ostream& os) {
   const std::string avg_hdr("   Avg. Time (ms)");
   const std::string percentage_hdr("   Time \%");
 
-  const float totalTimeMs = GetTotalTime();
+  const float total_time_ms = GetTotalTime();
 
   const auto cmp_layer = [](const LayerProfiler& a, const LayerProfiler& b) {
     return a.layer_name.size() < b.layer_name.size();
@@ -37,11 +37,11 @@ void Profiler::Print(std::ostream& os) {
     // clang off
     os << std::setw(name_length) << p.layer_name << std::setw(time_length) << std::fixed << std::setprecision(2) << p.ms
        << std::setw(avg_length) << std::fixed << std::setprecision(4) << p.ms / update_count_
-       << std::setw(percentage_length) << std::fixed << std::setprecision(1) << p.ms / totalTimeMs * 100 << std::endl;
+       << std::setw(percentage_length) << std::fixed << std::setprecision(1) << p.ms / total_time_ms * 100 << std::endl;
   }
   {
     os << std::setw(name_length) << "Total" << std::setw(time_length) << std::fixed << std::setprecision(2)
-       << totalTimeMs << std::setw(avg_length) << std::fixed << std::setprecision(4) << totalTimeMs / update_count_
+       << total_time_ms << std::setw(avg_length) << std::fixed << std::setprecision(4) << total_time_ms / update_count_
        << std::setw(percentage_length) << std::fixed << std::setprecision(1) << 100.0 << std::endl;
     // clang on
   }

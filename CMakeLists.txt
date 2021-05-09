@@ -34,5 +34,3 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(tools)
-
-add_executable(main main.cpp)

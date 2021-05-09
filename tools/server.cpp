@@ -259,8 +259,8 @@ class SimpleStreamServer {
 }  // namespace sss
 
 int main(int argc, char* argv[]) {
-  // sss::SimpleServer server;
-  // server.Run("localhost:50051");
+  (void)argc;
+  (void)argv;
 
   std::unique_ptr<sss::async::HostContext> context = sss::async::CreateCustomHostContext(4, 8);
   sss::SimpleStreamServer server(context.get(), 4);

@@ -3,6 +3,8 @@
 #include "cuda_runtime_api.h"
 
 int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
     cudaSetDevice(0);
     cudaEvent_t start;
     cudaEvent_t end;

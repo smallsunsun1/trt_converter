@@ -83,6 +83,8 @@ class SimpleStreamClient {
 }  // namespace sss
 
 int main(int argc, char* argv[]) {
+  (void)argc;
+  (void)argv;
   grpc::ChannelArguments arguments;
   grpc::EnableDefaultHealthCheckService(true);
   arguments.SetLoadBalancingPolicyName("grpclb");
