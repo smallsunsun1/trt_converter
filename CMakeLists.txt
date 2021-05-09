@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61;-std=c++17;)
-set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always -fopenmp -fno-rtti -Wall -Wextra -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-invalid-offsetof")
+set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always -fopenmp -fno-rtti -Wall -Wextra -Wno-deprecated -Wno-deprecated-declarations -Wno-invalid-offsetof")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 find_package(Threads REQUIRED)
@@ -34,3 +34,4 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(tools)
+

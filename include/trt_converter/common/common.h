@@ -50,6 +50,22 @@ inline std::ostream& operator<<(std::ostream& os, const nvinfer1::WeightsRole ro
   return os;
 }
 
+inline unsigned int GetElementSize(nvinfer1::DataType t) {
+  switch (t) {
+    case nvinfer1::DataType::kINT32:
+      return 4;
+    case nvinfer1::DataType::kFLOAT:
+      return 4;
+    case nvinfer1::DataType::kHALF:
+      return 2;
+    case nvinfer1::DataType::kBOOL:
+    case nvinfer1::DataType::kINT8:
+      return 1;
+  }
+  throw std::runtime_error("Invalid DataType.");
+  return 0;
+}
+
 }  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_COMMON_ */
