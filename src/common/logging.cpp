@@ -1,6 +1,7 @@
 #include "trt_converter/common/logging.h"
 
-#include <cassert>
+#include <glog/logging.h>
+#include <ostream>
 
 namespace sss {
 

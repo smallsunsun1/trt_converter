@@ -1,8 +1,23 @@
 #include "trt_converter/common/env.h"
 
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <ext/alloc_traits.h>
+#include <functional>
 #include <mutex>
+#include <ratio>
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <utility>
 
-#include "NvUtils.h"
+#include "NvInferRuntimeCommon.h"
+#include "cuda_runtime_api.h"
+#include "trt_converter/common/device.h"
+#include "trt_converter/common/options.h"
 #include "trt_converter/common/report.h"
 
 namespace sss {

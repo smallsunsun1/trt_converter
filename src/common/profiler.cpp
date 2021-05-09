@@ -2,9 +2,13 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <memory>
 #include <numeric>
+#include <unordered_map>
+#include <utility>
 
 #include "trt_converter/common/report.h"
+#include "trt_converter/common/utils.h"
 
 namespace sss {
 

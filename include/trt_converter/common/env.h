@@ -5,10 +5,13 @@
 #include <vector>
 
 #include "NvInfer.h"
+#include "NvInferRuntime.h"
 #include "trt_converter/common/options.h"
 #include "trt_converter/common/profiler.h"
 #include "trt_converter/common/utils.h"
+
 namespace sss {
+struct InferenceOptions;
 
 struct TRTInferenceEnvironment {
   TRTUniquePtr<nvinfer1::ICudaEngine> engine;

@@ -3,12 +3,19 @@
 
 #include <NvInfer.h>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "trt_converter/common/options.h"
 #include "trt_converter/common/utils.h"
 
+namespace nvinfer1 {
+class IExecutionContext;
+}  // namespace nvinfer1
+
 namespace sss {
+class Bindings;
+struct ReportingOptions;
 
 //!
 //! \struct InferenceTime

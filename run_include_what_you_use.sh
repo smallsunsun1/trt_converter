@@ -10,8 +10,10 @@ source_files=(${source_files1[@]} ${source_files2[@]})
 echo ${header_files[@]}
 echo ${source_files[@]}
 
+pushd build
+
 function run_include_what_you_use() {
-    python /usr/local/bin/iwyu_tool.py -p build -j 8 -v $1 \
+    python /usr/local/bin/iwyu_tool.py -p ./ -j 8 -v $1 \
     | python /usr/local/bin/fix_includes.py -b --nocomments
 }
 
@@ -24,3 +26,5 @@ for filename in ${source_files[@]}
 do 
     run_include_what_you_use ${filename}
 done 
+
+popd

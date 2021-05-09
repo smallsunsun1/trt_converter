@@ -1,6 +1,7 @@
 #ifndef INCLUDE_TRT_CONVERTER_COMMON_LOGGER_
 #define INCLUDE_TRT_CONVERTER_COMMON_LOGGER_
 
+#include "NvInferRuntimeCommon.h"
 #include "trt_converter/common/logging.h"
 
 namespace sss {

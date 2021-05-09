@@ -3,10 +3,12 @@
 
 #include <chrono>
 #include <iostream>
+#include <string>
 #include <string_view>
 #include <vector>
 
 #include "NvInfer.h"
+#include "NvInferRuntime.h"
 
 namespace sss {
 class TimeScopedProfiler {
