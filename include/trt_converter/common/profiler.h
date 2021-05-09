@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "NvInfer.h"
-#include "trt_converter/common/report.h"
 
 namespace sss {
 class TimeScopedProfiler {
@@ -36,10 +35,12 @@ class Profiler : public nvinfer1::IProfiler {
  public:
   void reportLayerTime(const char* layerName, float ms) noexcept override;
   void Print(std::ostream& os);
+  void ExportJSONProfile(const std::string& fileName) const;
 
  private:
   float GetTotalTime() const;
   std::vector<LayerProfiler> layers_;
+  std::vector<LayerProfiler>::iterator l_iterator_ = layers_.begin();
   int update_count_;
 };
 

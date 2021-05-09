@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "NvUtils.h"
+#include "trt_converter/common/report.h"
 
 namespace sss {
 
@@ -170,7 +171,7 @@ class Iteration {
         events_[d][e].reset(new TRTCudaEvent(!inference.spin));
       }
     }
-    CreateEnqueueFunction(inference, context, bindings);
+    CreateEnqueueFunction(inference, context);
   }
 
   void Query(bool skip_transfers) {
@@ -255,8 +256,7 @@ class Iteration {
         GetEvent(EventType::kCOMPUTE_S) - gpu_start, GetEvent(EventType::kCOMPUTE_E) - gpu_start, os, oe);
   }
 
-  void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context,
-                             Bindings& bindings) {
+  void CreateEnqueueFunction(const InferenceOptions& inference, nvinfer1::IExecutionContext& context) {
     if (inference.batch) {
       enqueue_ = EnqueueFunction(EnqueueImplicit(context, bindings_.GetDeviceBuffers(), inference.batch));
     } else {

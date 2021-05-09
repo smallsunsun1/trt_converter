@@ -185,6 +185,16 @@ class Bindings {
     names_[name] = b;
     bindings_[b].is_input = is_input;
     bindings_[b].buffer.Allocate(static_cast<size_t>(volume) * static_cast<size_t>(DataTypeSize(data_type)));
+    bindings_[b].volume = volume;
+    bindings_[b].data_type = data_type;
+    device_pointers_[b] = bindings_[b].buffer.GetDeviceBuffer();
+    if (is_input) {
+      if (filename.empty()) {
+        Fill(b);
+      } else {
+        Fill(b, filename);
+      }
+    }
   }
   void** GetDeviceBuffers() { return device_pointers_.data(); }
 
@@ -228,7 +238,10 @@ class Bindings {
   }
 
   void DumpBindings(const nvinfer1::IExecutionContext& context, std::ostream& os) const {
-    auto all = [](const Binding& b) { return true; };
+    auto all = [](const Binding& b) {
+      (void)b;
+      return true;
+    };
     DumpBindings(context, all, os);
   }
 
@@ -257,7 +270,10 @@ class Bindings {
   }
 
   std::unordered_map<std::string, int> GetBindings() const {
-    auto all = [](const Binding& b) { return true; };
+    auto all = [](const Binding& b) {
+      (void)b;
+      return true;
+    };
     return GetBindings(all);
   }
   std::unordered_map<std::string, int> GetBindings(bool (*predicate)(const Binding& b)) const {

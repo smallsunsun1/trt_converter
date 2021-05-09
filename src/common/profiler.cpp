@@ -4,12 +4,32 @@
 #include <iomanip>
 #include <numeric>
 
+#include "trt_converter/common/report.h"
+
 namespace sss {
 
 float Profiler::GetTotalTime() const {
   float time =
       std::accumulate(layers_.begin(), layers_.end(), 0, [](float l1, const LayerProfiler& l2) { return l1 + l2.ms; });
   return time;
+}
+
+void Profiler::reportLayerTime(const char* layerName, float ms) noexcept {
+  auto l_iterator_ = layers_.begin();
+  if (l_iterator_ == layers_.end()) {
+    const bool first = !layers_.empty() && layers_.begin()->layer_name == layerName;
+    update_count_ += layers_.empty() || first;
+    if (first) {
+      l_iterator_ = layers_.begin();
+      {
+        layers_.emplace_back();
+        layers_.back().layer_name = layerName;
+        l_iterator_ = layers_.end() - 1;
+      }
+      l_iterator_->ms += ms;
+      ++l_iterator_;
+    }
+  }
 }
 
 void Profiler::Print(std::ostream& os) {
@@ -48,5 +68,54 @@ void Profiler::Print(std::ostream& os) {
   os << std::endl;
 }
 
+void Profiler::ExportJSONProfile(const std::string& filename) const {
+  std::ofstream os(filename, std::ofstream::trunc);
+  os << "[" << std::endl << "  { \"count\" : " << update_count_ << " }" << std::endl;
+
+  const auto totalTimeMs = GetTotalTime();
+
+  for (const auto& l : layers_) {
+    // clang off
+    os << ", {"
+       << " \"name\" : \"" << l.layer_name
+       << "\""
+          ", \"timeMs\" : "
+       << l.ms << ", \"averageMs\" : " << l.ms / update_count_ << ", \"percentage\" : " << l.ms / totalTimeMs * 100
+       << " }" << std::endl;
+    // clang on
+  }
+  os << "]" << std::endl;
+}
+
+void DumpInputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os) {
+  os << "Input Tensors:" << std::endl;
+  bindings.DumpInputs(context, os);
+}
+
+void DumpOutputs(const nvinfer1::IExecutionContext& context, const Bindings& bindings, std::ostream& os) {
+  os << "Output Tensors:" << std::endl;
+  bindings.DumpOutputs(context, os);
+}
+
+void ExportJSONOutput(const nvinfer1::IExecutionContext& context, const Bindings& bindings,
+                      const std::string& filename) {
+  std::ofstream os(filename, std::ofstream::trunc);
+  std::string sep = "  ";
+  const auto output = bindings.GetOutputBindings();
+  os << "[" << std::endl;
+  for (const auto& binding : output) {
+    // clang off
+    os << sep << "{ \"name\" : \"" << binding.first << "\"" << std::endl;
+    sep = ", ";
+    os << "  " << sep << "\"dimensions\" : \"";
+    bindings.DumpBindingDimensions(binding.second, context, os);
+    os << "\"" << std::endl;
+    os << "  " << sep << "\"values\" : [ ";
+    bindings.DumpBindingValues(binding.second, os, sep);
+    os << " ]" << std::endl << "  }" << std::endl;
+    // clang on
+  }
+  os << "]" << std::endl;
+}
 
 }  // namespace sss
