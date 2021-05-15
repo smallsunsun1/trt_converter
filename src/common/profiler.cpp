@@ -122,4 +122,25 @@ void ExportJSONOutput(const nvinfer1::IExecutionContext& context, const Bindings
   os << "]" << std::endl;
 }
 
+void TimerBase::Start() {}
+void TimerBase::Stop() {}
+
+void GpuTimer::Start() { CUDA_CHECK(cudaEventRecord(start_)); }
+void GpuTimer::Stop() {
+  CUDA_CHECK(cudaEventRecord(end_));
+  float ms{0.0f};
+  CUDA_CHECK(cudaEventSynchronize(end_));
+  CUDA_CHECK(cudaEventElapsedTime(&ms, start_, end_));
+  ms_ += ms;
+}
+GpuTimer::~GpuTimer() {
+  CUDA_CHECK(cudaEventDestroy(start_));
+  CUDA_CHECK(cudaEventDestroy(end_));
+}
+void CpuTimer::Start() { start_ = std::chrono::high_resolution_clock::now(); }
+void CpuTimer::Stop() {
+  end_ = std::chrono::high_resolution_clock::now();
+  ms_ = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count();
+}
+
 }  // namespace sss

@@ -2446,7 +2446,7 @@ inline expr fabs(expr arg) { return unary_specialized<expr>::fabs(arg); }
 /// \param y second operand
 /// \return remainder of floating point division.
 //		template<typename T,typename U> typename enable<expr,T,U>::type fmod(T x, U y) { return
-//functions::fmod(x, y); }
+// functions::fmod(x, y); }
 inline expr fmod(half x, half y) { return functions::fmod(x, y); }
 inline expr fmod(half x, expr y) { return functions::fmod(x, y); }
 inline expr fmod(expr x, half y) { return functions::fmod(x, y); }
@@ -2518,7 +2518,7 @@ inline expr fmin(expr x, expr y) { return binary_specialized<expr, expr>::fmin(x
 /// \param y second operand
 /// \return \a x - \a y or 0 if difference negative
 //		template<typename T,typename U> typename enable<expr,T,U>::type fdim(T x, U y) { return
-//functions::fdim(x, y); }
+// functions::fdim(x, y); }
 inline expr fdim(half x, half y) { return functions::fdim(x, y); }
 inline expr fdim(half x, expr y) { return functions::fdim(x, y); }
 inline expr fdim(expr x, half y) { return functions::fdim(x, y); }
@@ -2854,7 +2854,7 @@ inline half frexp(expr arg, int* exp) { return functions::frexp(arg, exp); }
 /// \param exp power of two to multiply with
 /// \return \a arg multplied by 2 raised to \a exp
 //		template<typename T> typename enable<half,T>::type ldexp(T arg, int exp) { return
-//functions::scalbln(arg, exp);
+// functions::scalbln(arg, exp);
 //}
 inline half ldexp(half arg, int exp) { return functions::scalbln(arg, exp); }
 inline half ldexp(expr arg, int exp) { return functions::scalbln(arg, exp); }
@@ -2874,7 +2874,7 @@ inline half modf(expr arg, half* iptr) { return functions::modf(arg, iptr); }
 /// \param exp power of two to multiply with
 /// \return \a arg multplied by 2 raised to \a exp
 //		template<typename T> typename enable<half,T>::type scalbn(T arg, int exp) { return
-//functions::scalbln(arg, exp);
+// functions::scalbln(arg, exp);
 //}
 inline half scalbn(half arg, int exp) { return functions::scalbln(arg, exp); }
 inline half scalbn(expr arg, int exp) { return functions::scalbln(arg, exp); }

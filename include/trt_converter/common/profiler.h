@@ -9,6 +9,8 @@
 
 #include "NvInfer.h"
 #include "NvInferRuntime.h"
+#include "cuda_runtime_api.h"
+#include "trt_converter/common/device.h"
 
 namespace sss {
 class TimeScopedProfiler {
@@ -44,6 +46,44 @@ class Profiler : public nvinfer1::IProfiler {
   std::vector<LayerProfiler> layers_;
   std::vector<LayerProfiler>::iterator l_iterator_ = layers_.begin();
   int update_count_;
+};
+
+class TimerBase {
+ public:
+  virtual void Start();
+  virtual void Stop();
+  float Microseconds() const noexcept { return ms_ * 1000.f; }
+  float Milliseconds() const noexcept { return ms_; }
+  float Seconds() const noexcept { return ms_ / 1000.f; }
+  void Reset() noexcept { ms_ = 0.f; }
+
+ protected:
+  float ms_{0.0f};
+};
+class GpuTimer : public TimerBase {
+ public:
+  GpuTimer(cudaStream_t stream) : stream_(stream) {
+    CUDA_CHECK(cudaEventCreate(&start_));
+    CUDA_CHECK(cudaEventCreate(&end_));
+  }
+  ~GpuTimer();
+  void Start() override;
+  void Stop() override;
+
+ private:
+  cudaEvent_t start_;
+  cudaEvent_t end_;
+  cudaStream_t stream_;
+};
+
+class CpuTimer : public TimerBase {
+ public:
+  void Start() override;
+  void Stop() override;
+
+ private:
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+  std::chrono::time_point<std::chrono::high_resolution_clock> end_;
 };
 
 }  // namespace sss
