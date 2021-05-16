@@ -29,7 +29,7 @@ class SampleInt8 {
   template <typename T>
   using SampleUniquePtr = std::unique_ptr<T, InferDeleter>;
   SampleInt8(const SampleInt8Params& params) : params_(params), engine_(nullptr) {
-    initLibNvInferPlugins(Logger::Instance(), "");
+    initLibNvInferPlugins(&Logger::Instance(), "");
   }
   bool Build(nvinfer1::DataType dataType);
 
@@ -55,19 +55,70 @@ class SampleInt8 {
 };
 
 bool SampleInt8::Build(nvinfer1::DataType dataType) {
+  SampleUniquePtr<nvinfer1::IBuilder> builder(nvinfer1::createInferBuilder(Logger::Instance()));
+  if (builder) {
+    return false;
+  }
+  SampleUniquePtr<nvinfer1::INetworkDefinition> network(builder->createNetwork());
+  if (network) {
+    return false;
+  }
+  SampleUniquePtr<nvinfer1::IBuilderConfig> config(builder->createBuilderConfig());
+  if (!config) {
+    return false;
+  }
+  auto parser = SampleUniquePtr<nvcaffeparser1::ICaffeParser>(nvcaffeparser1::createCaffeParser());
+  if (!parser) {
+    return false;
+  }
+
+  if ((dataType == nvinfer1::DataType::kINT8 && !builder->platformHasFastInt8()) ||
+      (dataType == nvinfer1::DataType::kHALF && !builder->platformHasFastFp16())) {
+    return false;
+  }
+
+  auto constructed = ConstructNetwork(builder, network, config, parser, dataType);
+  if (!constructed) {
+    return false;
+  }
+
+  assert(network->getNbInputs() == 1);
+  input_dims_ = network->getInput(0)->getDimensions();
+  assert(mInputDims.nbDims == 3);
   return true;
 }
 
 bool SampleInt8::IsSupported(nvinfer1::DataType dataType) {
+  auto builder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(Logger::Instance()));
+  if (!builder) {
+    return false;
+  }
+
+  if ((dataType == nvinfer1::DataType::kINT8 && !builder->platformHasFastInt8()) ||
+      (dataType == nvinfer1::DataType::kHALF && !builder->platformHasFastFp16())) {
+    return false;
+  }
+
   return true;
 }
 
 bool SampleInt8::Teardown() {
+  nvcaffeparser1::shutdownProtobufLibrary();
   return true;
 }
 
-bool SampleInt8::Infer(std::vector<float> &score, int firstScoreBatch, int nbScoreBatches) {
+bool SampleInt8::ConstructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
+                                  SampleUniquePtr<nvinfer1::INetworkDefinition>& network,
+                                  SampleUniquePtr<nvinfer1::IBuilderConfig>& config,
+                                  SampleUniquePtr<nvcaffeparser1::ICaffeParser>& parser, nvinfer1::DataType dataType) {
+  engine_ = nullptr;
+  const nvcaffeparser1::IBlobNameToTensor* blobNameToTensor =
+      parser->parse(LocateFile(params_.prototxt_filename, params_.data_dirs).c_str(),
+                    LocateFile(params_.weights_filename, params_.data_dirs).c_str(), *network,
+                    dataType == nvinfer1::DataType::kINT8 ? nvinfer1::DataType::kFLOAT : dataType);
   return true;
 }
+
+bool SampleInt8::Infer(std::vector<float>& score, int firstScoreBatch, int nbScoreBatches) { return true; }
 
 }  // namespace sss

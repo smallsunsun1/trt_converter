@@ -12,7 +12,7 @@ using Severity = nvinfer1::ILogger::Severity;
 class Logger : public nvinfer1::ILogger {
  public:
   virtual void log(Severity severity, const char* msg) TRTC_NOEXCEPT override;
-  static Logger* Instance();
+  static Logger& Instance();
 };
 
 }  // namespace sss

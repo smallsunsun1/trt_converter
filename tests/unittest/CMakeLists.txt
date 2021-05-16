@@ -17,3 +17,8 @@ add_executable(logger_unittest logger_unittest.cpp)
 target_link_libraries(logger_unittest PUBLIC ${GTEST_LIBRARIES} common)
 target_include_directories(logger_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
 add_test(NAME test_logger COMMAND logger_unittest)
+
+add_executable(filesystem_unittest filesystem_unittest.cpp)
+target_link_libraries(filesystem_unittest PUBLIC ${GTEST_LIBRARIES} common)
+target_include_directories(filesystem_unittest PRIVATE ${GTEST_INCLUDE_DIRS})
+add_test(NAME test_filesystem COMMAND filesystem_unittest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

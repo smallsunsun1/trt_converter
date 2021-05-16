@@ -5,7 +5,7 @@
 
 namespace sss {
 
-void Logger::log(Severity severity, const char *msg) TRTC_NOEXCEPT {
+void Logger::log(Severity severity, const char* msg) TRTC_NOEXCEPT {
   switch (severity) {
     case Severity::kINFO:
       LOG(INFO) << msg;
@@ -23,8 +23,8 @@ void Logger::log(Severity severity, const char *msg) TRTC_NOEXCEPT {
   }
 }
 
-Logger* Logger::Instance() {
-  static Logger* logger = new Logger;
+Logger& Logger::Instance() {
+  static Logger logger;
   return logger;
 }
 

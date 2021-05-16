@@ -75,6 +75,8 @@ struct InferDeleter {
   }
 };
 
+std::string LocateFile(const std::string& filepath_suffix, const std::vector<std::string>& directories);
+
 }  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_COMMON_ */
