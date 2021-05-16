@@ -23,4 +23,9 @@ void Logger::log(Severity severity, const char *msg) TRTC_NOEXCEPT {
   }
 }
 
+Logger* Logger::Instance() {
+  static Logger* logger = new Logger;
+  return logger;
+}
+
 }  // namespace sss

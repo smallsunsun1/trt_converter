@@ -66,6 +66,15 @@ inline unsigned int GetElementSize(nvinfer1::DataType t) {
   return 0;
 }
 
+struct InferDeleter {
+  template <typename T>
+  void operator()(T* obj) const {
+    if (obj) {
+      obj->destroy();
+    }
+  }
+};
+
 }  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_COMMON_ */
