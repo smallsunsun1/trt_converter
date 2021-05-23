@@ -336,195 +336,176 @@ bool SampleInt8::Infer(std::vector<float>& score, int firstScoreBatch, int nbSco
   return true;
 }
 
-bool SampleInt8::ProcessInput(const BufferManager& buffers, const float* data)
-{
-    // Fill data buffer
-    float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(params_.input_tensor_names[0]));
-    std::memcpy(hostDataBuffer, data, params_.batch_size * Volume(input_dims_) * sizeof(float));
-    return true;
+bool SampleInt8::ProcessInput(const BufferManager& buffers, const float* data) {
+  // Fill data buffer
+  float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(params_.input_tensor_names[0]));
+  std::memcpy(hostDataBuffer, data, params_.batch_size * Volume(input_dims_) * sizeof(float));
+  return true;
 }
 
-int SampleInt8::CalculateScore(
-    const BufferManager& buffers, float* labels, int batchSize, int outputSize, int threshold)
-{
-    float* probs = static_cast<float*>(buffers.getHostBuffer(params_.output_tensor_names[0]));
+int SampleInt8::CalculateScore(const BufferManager& buffers, float* labels, int batchSize, int outputSize,
+                               int threshold) {
+  float* probs = static_cast<float*>(buffers.getHostBuffer(params_.output_tensor_names[0]));
 
-    int success = 0;
-    for (int i = 0; i < batchSize; i++)
-    {
-        float *prob = probs + outputSize * i, correct = prob[(int) labels[i]];
+  int success = 0;
+  for (int i = 0; i < batchSize; i++) {
+    float *prob = probs + outputSize * i, correct = prob[(int)labels[i]];
 
-        int better = 0;
-        for (int j = 0; j < outputSize; j++)
-        {
-            if (prob[j] >= correct)
-            {
-                better++;
-            }
-        }
-        if (better <= threshold)
-        {
-            success++;
-        }
+    int better = 0;
+    for (int j = 0; j < outputSize; j++) {
+      if (prob[j] >= correct) {
+        better++;
+      }
     }
-    return success;
+    if (better <= threshold) {
+      success++;
+    }
+  }
+  return success;
 }
 
-SampleInt8Params initializeSampleParams(const Args& args, int batchSize)
-{
-    SampleInt8Params params;
-    // Use directories provided by the user, in addition to default directories.
-    params.data_dirs = args.data_dirs;
-    params.data_dirs.emplace_back("data/mnist/");
-    params.data_dirs.emplace_back("int8/mnist/");
-    params.data_dirs.emplace_back("samples/mnist/");
-    params.data_dirs.emplace_back("data/samples/mnist/");
-    params.data_dirs.emplace_back("data/int8/mnist/");
-    params.data_dirs.emplace_back("data/int8_samples/mnist/");
+SampleInt8Params initializeSampleParams(const Args& args, int batchSize) {
+  SampleInt8Params params;
+  // Use directories provided by the user, in addition to default directories.
+  params.data_dirs = args.data_dirs;
+  params.data_dirs.emplace_back("data/mnist/");
+  params.data_dirs.emplace_back("int8/mnist/");
+  params.data_dirs.emplace_back("samples/mnist/");
+  params.data_dirs.emplace_back("data/samples/mnist/");
+  params.data_dirs.emplace_back("data/int8/mnist/");
+  params.data_dirs.emplace_back("data/int8_samples/mnist/");
 
-    params.batch_size = batchSize;
-    params.dla_core = args.use_dla_core;
-    params.nb_cal_batches = 10;
-    params.cal_batch_size = 50;
-    params.input_tensor_names.push_back("data");
-    params.output_tensor_names.push_back("prob");
-    params.prototxt_filename = "deploy.prototxt";
-    params.weights_filename = "mnist_lenet.caffemodel";
-    params.network_name = "mnist";
-    return params;
+  params.batch_size = batchSize;
+  params.dla_core = args.use_dla_core;
+  params.nb_cal_batches = 10;
+  params.cal_batch_size = 50;
+  params.input_tensor_names.push_back("data");
+  params.output_tensor_names.push_back("prob");
+  params.prototxt_filename = "deploy.prototxt";
+  params.weights_filename = "mnist_lenet.caffemodel";
+  params.network_name = "mnist";
+  return params;
 }
 
-void PrintHelpInfo()
-{
-    std::cout << "Usage: ./sample_int8 [-h or --help] [-d or --datadir=<path to data directory>] "
-                 "[--useDLACore=<int>]"
-              << std::endl;
-    std::cout << "--help, -h      Display help information" << std::endl;
-    std::cout << "--datadir       Specify path to a data directory, overriding the default. This option can be used "
-                 "multiple times to add multiple directories."
-              << std::endl;
-    std::cout << "--useDLACore=N  Specify a DLA engine for layers that support DLA. Value can range from 0 to n-1, "
-                 "where n is the number of DLA engines on the platform."
-              << std::endl;
-    std::cout << "batch=N         Set batch size (default = 32)." << std::endl;
-    std::cout << "start=N         Set the first batch to be scored (default = 16). All batches before this batch will "
-                 "be used for calibration."
-              << std::endl;
-    std::cout << "score=N         Set the number of batches to be scored (default = 1800)." << std::endl;
+void PrintHelpInfo() {
+  std::cout << "Usage: ./sample_int8 [-h or --help] [-d or --datadir=<path to data directory>] "
+               "[--useDLACore=<int>]"
+            << std::endl;
+  std::cout << "--help, -h      Display help information" << std::endl;
+  std::cout << "--datadir       Specify path to a data directory, overriding the default. This option can be used "
+               "multiple times to add multiple directories."
+            << std::endl;
+  std::cout << "--useDLACore=N  Specify a DLA engine for layers that support DLA. Value can range from 0 to n-1, "
+               "where n is the number of DLA engines on the platform."
+            << std::endl;
+  std::cout << "batch=N         Set batch size (default = 32)." << std::endl;
+  std::cout << "start=N         Set the first batch to be scored (default = 16). All batches before this batch will "
+               "be used for calibration."
+            << std::endl;
+  std::cout << "score=N         Set the number of batches to be scored (default = 1800)." << std::endl;
 }
 
-int main(int argc, char** argv)
-{
-    if (argc >= 2 && (!strncmp(argv[1], "--help", 6) || !strncmp(argv[1], "-h", 2)))
-    {
-        PrintHelpInfo();
-        return 0;
-    }
-
-    // By default we score over 57600 images starting at 512, so we don't score those used to search calibration
-    int batchSize = 32;
-    int firstScoreBatch = 16;
-    int nbScoreBatches = 1800;
-
-    // Parse extra arguments
-    for (int i = 1; i < argc; ++i)
-    {
-        if (!strncmp(argv[i], "batch=", 6))
-        {
-            batchSize = atoi(argv[i] + 6);
-        }
-        else if (!strncmp(argv[i], "start=", 6))
-        {
-            firstScoreBatch = atoi(argv[i] + 6);
-        }
-        else if (!strncmp(argv[i], "score=", 6))
-        {
-            nbScoreBatches = atoi(argv[i] + 6);
-        }
-    }
-
-    if (batchSize > 128)
-    {
-        LOG(ERROR) << "Please provide batch size <= 128" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if ((firstScoreBatch + nbScoreBatches) * batchSize > 60000)
-    {
-        LOG(ERROR) << "Only 60000 images available" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    Args args;
-    // ParseArgs(args, argc, argv);
-
-    // SampleInt8 sample(initializeSampleParams(args, batchSize));
-
-    // auto sampleTest = sample::gLogger.defineTest(gSampleName, argc, argv);
-
-    // sample::gLogger.reportTestStart(sampleTest);
-
-    // sample::gLogInfo << "Building and running a GPU inference engine for INT8 sample" << std::endl;
-
-    // std::vector<std::string> dataTypeNames = {"FP32", "FP16", "INT8"};
-    // std::vector<std::string> topNames = {"Top1", "Top5"};
-    // std::vector<nvinfer1::DataType> dataTypes = {nvinfer1::DataType::kFLOAT, 
-                                                  // nvinfer1::DataType::kHALF, nvinfer1::DataType::kINT8};
-    // std::vector<std::vector<float>> scores(3, std::vector<float>(2, 0.0f));
-    // for (size_t i = 0; i < dataTypes.size(); i++)
-    // {
-    //     sample::gLogInfo << dataTypeNames[i] << " run:" << nbScoreBatches << " batches of size " << batchSize
-    //                      << " starting at " << firstScoreBatch << std::endl;
-
-    //     if (!sample.build(dataTypes[i]))
-    //     {
-    //         if (!sample.isSupported(dataTypes[i]))
-    //         {
-    //             sample::gLogWarning << "Skipping " << dataTypeNames[i]
-    //                                 << " since the platform does not support this data type." << std::endl;
-    //             continue;
-    //         }
-    //         return sample::gLogger.reportFail(sampleTest);
-    //     }
-    //     if (!sample.infer(scores[i], firstScoreBatch, nbScoreBatches))
-    //     {
-    //         return sample::gLogger.reportFail(sampleTest);
-    //     }
-    // }
-
-    // auto isApproximatelyEqual = [](float a, float b, double tolerance) { return (std::abs(a - b) <= tolerance); };
-    // const double tolerance{0.01};
-    // const double goldenMNIST{0.99};
-
-    // if ((scores[0][0] < goldenMNIST) || (scores[0][1] < goldenMNIST))
-    // {
-    //     sample::gLogError << "FP32 accuracy is less than 99%: Top1 = " << scores[0][0] << ", Top5 = " << scores[0][1]
-    //                       << "." << std::endl;
-    //     return sample::gLogger.reportFail(sampleTest);
-    // }
-
-    // for (unsigned i = 0; i < topNames.size(); i++)
-    // {
-    //     for (unsigned j = 1; j < dataTypes.size(); j++)
-    //     {
-    //         if (scores[j][i] != 0.0f && !isApproximatelyEqual(scores[0][i], scores[j][i], tolerance))
-    //         {
-    //             sample::gLogError << "FP32(" << scores[0][i] << ") and " << dataTypeNames[j] << "(" << scores[j][i]
-    //                               << ") " << topNames[i] << " accuracy differ by more than " << tolerance << "."
-    //                               << std::endl;
-    //             return sample::gLogger.reportFail(sampleTest);
-    //         }
-    //     }
-    // }
-
-    // if (!sample.Teardown())
-    // {
-    //     return sample::gLogger.reportFail(sampleTest);
-    // }
-
-    // return sample::gLogger.reportPass(sampleTest);
+int main(int argc, char** argv) {
+  if (argc >= 2 && (!strncmp(argv[1], "--help", 6) || !strncmp(argv[1], "-h", 2))) {
+    PrintHelpInfo();
     return 0;
-}
+  }
 
+  // By default we score over 57600 images starting at 512, so we don't score those used to search calibration
+  int batchSize = 32;
+  int firstScoreBatch = 16;
+  int nbScoreBatches = 1800;
+
+  // Parse extra arguments
+  for (int i = 1; i < argc; ++i) {
+    if (!strncmp(argv[i], "batch=", 6)) {
+      batchSize = atoi(argv[i] + 6);
+    } else if (!strncmp(argv[i], "start=", 6)) {
+      firstScoreBatch = atoi(argv[i] + 6);
+    } else if (!strncmp(argv[i], "score=", 6)) {
+      nbScoreBatches = atoi(argv[i] + 6);
+    }
+  }
+
+  if (batchSize > 128) {
+    LOG(ERROR) << "Please provide batch size <= 128" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if ((firstScoreBatch + nbScoreBatches) * batchSize > 60000) {
+    LOG(ERROR) << "Only 60000 images available" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  Args args;
+  // ParseArgs(args, argc, argv);
+
+  // SampleInt8 sample(initializeSampleParams(args, batchSize));
+
+  // auto sampleTest = sample::gLogger.defineTest(gSampleName, argc, argv);
+
+  // sample::gLogger.reportTestStart(sampleTest);
+
+  // sample::gLogInfo << "Building and running a GPU inference engine for INT8 sample" << std::endl;
+
+  // std::vector<std::string> dataTypeNames = {"FP32", "FP16", "INT8"};
+  // std::vector<std::string> topNames = {"Top1", "Top5"};
+  // std::vector<nvinfer1::DataType> dataTypes = {nvinfer1::DataType::kFLOAT,
+  // nvinfer1::DataType::kHALF, nvinfer1::DataType::kINT8};
+  // std::vector<std::vector<float>> scores(3, std::vector<float>(2, 0.0f));
+  // for (size_t i = 0; i < dataTypes.size(); i++)
+  // {
+  //     sample::gLogInfo << dataTypeNames[i] << " run:" << nbScoreBatches << " batches of size " << batchSize
+  //                      << " starting at " << firstScoreBatch << std::endl;
+
+  //     if (!sample.build(dataTypes[i]))
+  //     {
+  //         if (!sample.isSupported(dataTypes[i]))
+  //         {
+  //             sample::gLogWarning << "Skipping " << dataTypeNames[i]
+  //                                 << " since the platform does not support this data type." << std::endl;
+  //             continue;
+  //         }
+  //         return sample::gLogger.reportFail(sampleTest);
+  //     }
+  //     if (!sample.infer(scores[i], firstScoreBatch, nbScoreBatches))
+  //     {
+  //         return sample::gLogger.reportFail(sampleTest);
+  //     }
+  // }
+
+  // auto isApproximatelyEqual = [](float a, float b, double tolerance) { return (std::abs(a - b) <= tolerance); };
+  // const double tolerance{0.01};
+  // const double goldenMNIST{0.99};
+
+  // if ((scores[0][0] < goldenMNIST) || (scores[0][1] < goldenMNIST))
+  // {
+  //     sample::gLogError << "FP32 accuracy is less than 99%: Top1 = " << scores[0][0] << ", Top5 = " << scores[0][1]
+  //                       << "." << std::endl;
+  //     return sample::gLogger.reportFail(sampleTest);
+  // }
+
+  // for (unsigned i = 0; i < topNames.size(); i++)
+  // {
+  //     for (unsigned j = 1; j < dataTypes.size(); j++)
+  //     {
+  //         if (scores[j][i] != 0.0f && !isApproximatelyEqual(scores[0][i], scores[j][i], tolerance))
+  //         {
+  //             sample::gLogError << "FP32(" << scores[0][i] << ") and " << dataTypeNames[j] << "(" << scores[j][i]
+  //                               << ") " << topNames[i] << " accuracy differ by more than " << tolerance << "."
+  //                               << std::endl;
+  //             return sample::gLogger.reportFail(sampleTest);
+  //         }
+  //     }
+  // }
+
+  // if (!sample.Teardown())
+  // {
+  //     return sample::gLogger.reportFail(sampleTest);
+  // }
+
+  // return sample::gLogger.reportPass(sampleTest);
+  return 0;
+}
 
 }  // namespace sss
