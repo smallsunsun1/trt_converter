@@ -39,6 +39,69 @@ struct Args {
   bool use_iloop = false;
 };
 
+// inline bool parseArgs(Args& args, int32_t argc, char* argv[]) {
+//   while (1) {
+//     int32_t arg;
+//     static struct Options long_options[] = {
+//         {"help", no_argument, 0, 'h'},        {"datadir", required_argument, 0, 'd'},
+//         {"int8", no_argument, 0, 'i'},        {"fp16", no_argument, 0, 'f'},
+//         {"useILoop", no_argument, 0, 'l'},    {"saveEngine", required_argument, 0, 's'},
+//         {"loadEngine", no_argument, 0, 'o'},  {"useDLACore", required_argument, 0, 'u'},
+//         {"batch", required_argument, 0, 'b'}, {nullptr, 0, nullptr, 0}};
+//     int32_t option_index = 0;
+//     arg = getopt_long(argc, argv, "hd:iu", long_options, &option_index);
+//     if (arg == -1) {
+//       break;
+//     }
+
+//     switch (arg) {
+//       case 'h':
+//         args.help = true;
+//         return true;
+//       case 'd':
+//         if (optarg) {
+//           args.dataDirs.push_back(optarg);
+//         } else {
+//           std::cerr << "ERROR: --datadir requires option argument" << std::endl;
+//           return false;
+//         }
+//         break;
+//       case 's':
+//         if (optarg) {
+//           args.saveEngine = optarg;
+//         }
+//         break;
+//       case 'o':
+//         if (optarg) {
+//           args.load_engine = optarg;
+//         }
+//         break;
+//       case 'i':
+//         args.runInInt8 = true;
+//         break;
+//       case 'f':
+//         args.runInFp16 = true;
+//         break;
+//       case 'l':
+//         args.useILoop = true;
+//         break;
+//       case 'u':
+//         if (optarg) {
+//           args.useDLACore = std::stoi(optarg);
+//         }
+//         break;
+//       case 'b':
+//         if (optarg) {
+//           args.batch = std::stoi(optarg);
+//         }
+//         break;
+//       default:
+//         return false;
+//     }
+//   }
+//   return true;
+// }
+
 }  // namespace sss
 
 #endif /* INCLUDE_TRT_CONVERTER_COMMON_ARGPARSER_ */
