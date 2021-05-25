@@ -3,7 +3,7 @@
 #include <mutex>
 #include <thread>
 
-#include "../third_party/async_lib/async/context/host_context.h"
+#include "third_party/async_lib/async/context/host_context.h"
 #include "grpc++/grpc++.h"
 #include "proto/message.grpc.pb.h"
 #include "proto/message.pb.h"

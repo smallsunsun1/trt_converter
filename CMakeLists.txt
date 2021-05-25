@@ -20,6 +20,7 @@ find_package(Glog REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(include)
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(/home/sunjiahe/libs/TensorRT-7.2.3.4/include)
 link_libraries(${CUDA_LIBRARIES} Threads::Threads glog::glog)
 
