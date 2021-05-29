@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "grpc++/grpc++.h"
 #include "grpc/grpc.h"
@@ -56,11 +57,13 @@ class SimpleClient {
 
 class SimpleStreamClient {
  public:
-  explicit SimpleStreamClient(std::shared_ptr<grpc::ChannelInterface> channel) : stub_(RpcWork::NewStub(channel)) {}
+  explicit SimpleStreamClient(std::shared_ptr<grpc::ChannelInterface> channel)
+      : stub_(RpcWork::NewStub(channel)), health_stub_(HealthCheck::NewStub(channel)) {}
   void StreamRemoteCall(Request req) {
     grpc::ClientContext context;
     std::unique_ptr<grpc::ClientReaderWriter<Request, Response>> reader_writer = stub_->RemoteStreamCall(&context);
     for (int i = 0; i < 100; ++i) {
+      req.set_type(std::to_string(i));
       reader_writer->Write(req);
     }
     reader_writer->WritesDone();
@@ -75,9 +78,27 @@ class SimpleStreamClient {
       std::cout << "ListFeatures rpc failed." << std::endl;
     }
   }
+  void HealthCheck() {
+    grpc::ClientContext context;
+    std::unique_ptr<grpc::ClientReaderWriter<HealthRequest, HealthResponse>> reader_writer = health_stub_->Watch(&context);
+    HealthRequest req;
+    HealthResponse response;
+    for (int i = 0; i < 100; ++i) {
+      reader_writer->Write(req);
+    }
+    reader_writer->WritesDone();
+    while (reader_writer->Read(&response)) {
+      std::cout << response.status() << std::endl;
+    }
+    grpc::Status status = reader_writer->Finish();
+    if (!status.ok()) {
+      std::cout << "some error happened!" << std::endl;
+    }
+  }
 
  private:
   std::unique_ptr<RpcWork::Stub> stub_;
+  std::unique_ptr<HealthCheck::Stub> health_stub_;
 };
 
 }  // namespace sss
@@ -86,7 +107,6 @@ int main(int argc, char* argv[]) {
   (void)argc;
   (void)argv;
   grpc::ChannelArguments arguments;
-  grpc::EnableDefaultHealthCheckService(true);
   arguments.SetLoadBalancingPolicyName("grpclb");
   //   sss::SimpleClient client(grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(),
   //   arguments));
@@ -96,10 +116,13 @@ int main(int argc, char* argv[]) {
   //     std::string reply = client.RemoteCall(name);
   //     std::cout << "Greeter Received " << reply << std::endl;
   //   }
+  // sss::SimpleStreamClient client(
+  // grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), arguments));
   sss::SimpleStreamClient client(
       grpc::CreateCustomChannel("localhost:50051", grpc::InsecureChannelCredentials(), arguments));
   sss::Request req;
   req.set_type("sss");
   client.StreamRemoteCall(std::move(req));
+  client.HealthCheck();
   return 0;
 }

@@ -10,6 +10,55 @@
 
 namespace sss {
 
+class RpcWorkImpl: public RpcWork::Service {
+public:
+  grpc::Status RemoteCall(grpc::ServerContext* context, const Request* request, Response* response) override {
+    (void)context;
+    response->set_type(request->type());
+    return grpc::Status::OK;
+  }
+  grpc::Status RemoteStreamCall(::grpc::ServerContext* context, ::grpc::ServerReaderWriter<Response, Request>* stream) override {
+    (void)context;
+    Response res;
+    Request req;
+    while (stream->Read(&req)) {
+      res.set_type("reply");
+      stream->Write(res);
+    }
+    return grpc::Status::OK;
+  }
+  grpc::Status Check(grpc::ServerContext* context, const HealthRequest* request, HealthResponse* response) override {
+    (void)context;
+    (void)request;
+    response->set_status(HealthResponse::OK);
+    return grpc::Status::OK;
+  }
+  grpc::Status Watch(grpc::ServerContext* context, grpc::ServerReaderWriter<HealthResponse, HealthRequest>* stream) override {
+    (void)context;
+    HealthRequest req;
+    HealthResponse res;
+    res.set_status(HealthResponse::OK);
+    while (stream->Read(&req)) {
+      stream->Write(res);
+    }
+    return grpc::Status::OK;
+  }
+};
+
+class HealthCheckImpl : public HealthCheck::Service {
+public:
+  grpc::Status Watch(grpc::ServerContext* context, grpc::ServerReaderWriter<HealthResponse, HealthRequest>* stream) override {
+    (void)context;
+    HealthRequest req;
+    HealthResponse res;
+    res.set_status(HealthResponse::OK);
+    while (stream->Read(&req)) {
+      stream->Write(res);
+    }
+    return grpc::Status::OK;
+  }
+};
+
 class SimpleServer {
  public:
   ~SimpleServer() {
@@ -125,13 +174,16 @@ class SimpleStreamServer {
     service_ = std::make_unique<RpcWork::AsyncService>();
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(service_.get());
+
+    sync_service_ = std::make_unique<HealthCheckImpl>();
+    builder.RegisterService(sync_service_.get());
+
     // Initialize Number Of CompletionQueue According To num_threads.
     for (size_t i = 0; i < server_queues_.size(); ++i) {
       server_queues_[i] = builder.AddCompletionQueue();
     }
     server_ = builder.BuildAndStart();
     std::cout << "Server Listen On " << server_address << std::endl;
-    //  AsyncCallDataImpl size is qeual to kNumCalls * num_server_queues
     constexpr uint32_t kNumCalls = 1000;
     for (uint32_t connection_num = 0; connection_num < kNumCalls; ++connection_num) {
       for (size_t i = 0; i < server_queues_.size(); ++i) {
@@ -249,6 +301,7 @@ class SimpleStreamServer {
   std::function<grpc::Status(Request*, Response*)> compute_func_;
   std::unique_ptr<RpcWork::AsyncService> service_;
   std::unique_ptr<grpc::Server> server_;
+  std::unique_ptr<HealthCheckImpl>  sync_service_;
   async::HostContext* run_context_;
   std::vector<std::unique_ptr<grpc::ServerCompletionQueue>> server_queues_;
   std::vector<std::unique_ptr<std::thread>> threads_;
@@ -261,7 +314,7 @@ class SimpleStreamServer {
 int main(int argc, char* argv[]) {
   (void)argc;
   (void)argv;
-
+  grpc::EnableDefaultHealthCheckService(true);
   std::unique_ptr<sss::async::HostContext> context = sss::async::CreateCustomHostContext(4, 8);
   sss::SimpleStreamServer server(context.get(), 4);
   server.Run("localhost:50051");
