@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
   TRTCudaGraph graph;
   TRTCudaStream stream;
   TRTCudaEvent event;
-  uint32_t size = std::stoi(argv[1]);
+  uint32_t size = std::atoi(argv[1]);
   int* data = new int[size];
   std::fill(data, data + size, 100);
   int* devData;
